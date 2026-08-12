@@ -5,13 +5,12 @@
 export const environment = {
   production: false,
   firebase: {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID",
-    measurementId: "YOUR_MEASUREMENT_ID"
+    apiKey: "AIzaSyCwp52r9Pe4sOhePaYJMvi0vjpJ7_CZHQc",
+    authDomain: "organizate-abinassar.firebaseapp.com",
+    projectId: "organizate-abinassar",
+    storageBucket: "organizate-abinassar.firebasestorage.app",
+    messagingSenderId: "536308863872",
+    appId: "1:536308863872:web:756ff0181107458c172765"
   }
 };
 
