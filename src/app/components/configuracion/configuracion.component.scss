@@ -82,6 +82,36 @@
     font-weight: 600;
     ion-icon { font-size: 20px; }
   }
+
+  &.binance-card {
+    .card-hero {
+      &.connected { background: linear-gradient(135deg, #f0b90b 0%, #c79807 100%); }
+      &.disconnected { background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%); }
+      &.testing { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); }
+      &.unconfigured { background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); }
+    }
+    
+    .binance-btn {
+      --background: #f0b90b;
+      --background-activated: #c79807;
+      --background-hover: #dfab0a;
+      --color: #1e2026;
+      font-weight: 700;
+    }
+  }
+
+  .error-item {
+    --background: rgba(239, 68, 68, 0.08);
+    margin: 8px 16px;
+    border-radius: 8px;
+    
+    .error-text {
+      color: var(--ion-color-danger, #ef4444);
+      font-size: 0.85rem;
+      font-weight: 500;
+      white-space: normal;
+    }
+  }
 }
 
 @keyframes spin {

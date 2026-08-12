@@ -71,3 +71,84 @@
     </div>
   </ion-card-content>
 </ion-card>
+
+<ion-card class="config-card binance-card">
+  <div class="card-hero" [ngClass]="binanceStatus">
+    <div class="status-icon-container">
+      <ion-icon class="pulse-icon" *ngIf="binanceStatus === 'connected' && binanceAuthStatus === 'valid'" name="shield-checkmark-outline"></ion-icon>
+      <ion-icon class="pulse-icon" *ngIf="binanceStatus === 'connected' && binanceAuthStatus !== 'valid'" name="link-outline"></ion-icon>
+      <ion-icon class="pulse-icon" *ngIf="binanceStatus === 'disconnected'" name="cloud-offline-outline"></ion-icon>
+      <ion-spinner *ngIf="binanceStatus === 'testing'" name="crescent"></ion-spinner>
+      <ion-icon *ngIf="binanceStatus === 'unconfigured'" name="warning-outline"></ion-icon>
+    </div>
+    
+    <div class="hero-text">
+      <h2>Conectividad Binance</h2>
+      <p *ngIf="binanceStatus === 'connected' && binanceAuthStatus === 'valid'">Conexión autenticada activa y funcional.</p>
+      <p *ngIf="binanceStatus === 'connected' && binanceAuthStatus === 'unchecked'">Conexión establecida. Firma omitida en navegador (CORS).</p>
+      <p *ngIf="binanceStatus === 'disconnected'">Sin conexión. Verifica las credenciales de API y red.</p>
+      <p *ngIf="binanceStatus === 'testing'">Verificando enlace con Binance...</p>
+      <p *ngIf="binanceStatus === 'unconfigured'">Falta configurar binanceApiKey y binanceSecretKey en environment.ts</p>
+    </div>
+  </div>
+
+  <ion-card-content class="ion-no-padding">
+    <ion-list lines="inset">
+      <ion-item>
+        <ion-label>
+          <h3>Servidor Binance</h3>
+          <p>Ping a api.binance.com</p>
+        </ion-label>
+        <ion-badge slot="end" [color]="binanceStatus === 'connected' ? 'success' : (binanceStatus === 'testing' ? 'primary' : 'danger')">
+          {{ binanceStatus === 'connected' ? 'Servidor Online' : (binanceStatus === 'testing' ? 'Verificando...' : (binanceStatus === 'unconfigured' ? 'Sin Configurar' : 'Desconectado')) }}
+        </ion-badge>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>
+          <h3>Firma y Llaves</h3>
+          <p>Autenticación HMAC-SHA256</p>
+        </ion-label>
+        <ion-badge slot="end" [color]="binanceAuthStatus === 'valid' ? 'success' : (binanceAuthStatus === 'invalid' ? 'danger' : (binanceAuthStatus === 'testing' ? 'primary' : 'warning'))">
+          {{ binanceAuthStatus === 'valid' ? 'Válida' : (binanceAuthStatus === 'invalid' ? 'Inválida' : (binanceAuthStatus === 'testing' ? 'Verificando...' : 'No verificada')) }}
+        </ion-badge>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>
+          <h3>Credenciales</h3>
+          <p>Estado de configuración</p>
+        </ion-label>
+        <ion-badge slot="end" [color]="binanceInitialized ? 'primary' : 'warning'">
+          {{ binanceInitialized ? 'Configuradas' : 'Sin Configurar' }}
+        </ion-badge>
+      </ion-item>
+
+      <ion-item *ngIf="binanceLastChecked">
+        <ion-label>
+          <h3>Última Verificación</h3>
+          <p>{{ binanceLastChecked | date:'mediumTime' }}</p>
+        </ion-label>
+      </ion-item>
+
+      <ion-item *ngIf="binanceErrorMessage" class="error-item">
+        <ion-icon slot="start" name="warning-outline" color="warning"></ion-icon>
+        <ion-label class="ion-text-wrap">
+          <p class="error-text">{{ binanceErrorMessage }}</p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+
+    <div class="action-container ion-padding">
+      <ion-button 
+        expand="block" 
+        [disabled]="binanceStatus === 'testing'" 
+        (click)="testBinanceConnection()"
+        class="refresh-btn binance-btn">
+        <ion-icon slot="start" name="refresh-outline" [class.spinning]="binanceStatus === 'testing'"></ion-icon>
+        Probar Conexión Binance
+      </ion-button>
+    </div>
+  </ion-card-content>
+</ion-card>
+

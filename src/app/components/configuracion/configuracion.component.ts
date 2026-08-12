@@ -20,9 +20,14 @@ import {
   cloudOfflineOutline, 
   checkmarkCircleOutline, 
   closeCircleOutline, 
-  warningOutline 
+  warningOutline,
+  keyOutline,
+  shieldCheckmarkOutline,
+  serverOutline,
+  linkOutline
 } from 'ionicons/icons';
 import { FirebaseService } from '../../services/firebase.service';
+import { BinanceService } from '../../services/binance.service';
 
 @Component({
   selector: 'app-configuracion',
@@ -50,10 +55,19 @@ export class ConfiguracionComponent implements OnInit, OnDestroy {
   lastChecked: Date | null = null;
   firebaseInitialized: boolean = false;
 
+  binanceStatus: 'connected' | 'disconnected' | 'testing' | 'unconfigured' = 'testing';
+  binanceAuthStatus: 'valid' | 'invalid' | 'testing' | 'unchecked' = 'unchecked';
+  binanceInitialized: boolean = false;
+  binanceLastChecked: Date | null = null;
+  binanceErrorMessage: string = '';
+
   private onlineListener!: () => void;
   private offlineListener!: () => void;
 
-  constructor(private firebaseService: FirebaseService) {
+  constructor(
+    private firebaseService: FirebaseService,
+    private binanceService: BinanceService
+  ) {
     addIcons({
       refreshOutline,
       wifiOutline,
@@ -61,14 +75,20 @@ export class ConfiguracionComponent implements OnInit, OnDestroy {
       cloudOfflineOutline,
       checkmarkCircleOutline,
       closeCircleOutline,
-      warningOutline
+      warningOutline,
+      keyOutline,
+      shieldCheckmarkOutline,
+      serverOutline,
+      linkOutline
     });
   }
 
   ngOnInit() {
     this.firebaseInitialized = this.firebaseService.isInitialized();
+    this.binanceInitialized = this.binanceService.isConfigured();
     this.setupNetworkListeners();
     this.testConnection();
+    this.testBinanceConnection();
   }
 
   ngOnDestroy() {
@@ -80,10 +100,13 @@ export class ConfiguracionComponent implements OnInit, OnDestroy {
     this.onlineListener = () => {
       this.isBrowserOnline = true;
       this.testConnection();
+      this.testBinanceConnection();
     };
     this.offlineListener = () => {
       this.isBrowserOnline = false;
       this.connectionStatus = 'disconnected';
+      this.binanceStatus = 'disconnected';
+      this.binanceAuthStatus = 'unchecked';
     };
 
     window.addEventListener('online', this.onlineListener);
@@ -129,5 +152,63 @@ export class ConfiguracionComponent implements OnInit, OnDestroy {
     
     // Volver a probar conexión tras cambiar estado
     this.testConnection();
+  }
+
+  async testBinanceConnection() {
+    if (!this.binanceInitialized) {
+      this.binanceStatus = 'unconfigured';
+      this.binanceAuthStatus = 'unchecked';
+      this.binanceLastChecked = new Date();
+      return;
+    }
+
+    this.binanceStatus = 'testing';
+    this.binanceAuthStatus = 'testing';
+    this.binanceErrorMessage = '';
+
+    if (!this.isBrowserOnline) {
+      setTimeout(() => {
+        this.binanceStatus = 'disconnected';
+        this.binanceAuthStatus = 'unchecked';
+        this.binanceLastChecked = new Date();
+      }, 800);
+      return;
+    }
+
+    try {
+      // 1. Probar ping público
+      const isPublicOk = await this.binanceService.testPublicConnection();
+      if (!isPublicOk) {
+        this.binanceStatus = 'disconnected';
+        this.binanceAuthStatus = 'unchecked';
+        this.binanceErrorMessage = 'No se pudo establecer comunicación con el servidor público de Binance (Ping fallido).';
+        return;
+      }
+
+      // 2. Si el ping funciona, la conexión de red con Binance está activa. Procedemos a verificar firma/credenciales.
+      const privateResult = await this.binanceService.testPrivateConnection();
+      
+      if (privateResult.success) {
+        this.binanceStatus = 'connected';
+        this.binanceAuthStatus = 'valid';
+      } else {
+        if (privateResult.errorType === 'cors') {
+          // El ping fue exitoso, por lo que hay conexión, pero el navegador bloqueó la firma por CORS
+          this.binanceStatus = 'connected';
+          this.binanceAuthStatus = 'unchecked'; // No se puede verificar por el navegador
+          this.binanceErrorMessage = privateResult.message || '';
+        } else {
+          this.binanceStatus = 'disconnected';
+          this.binanceAuthStatus = 'invalid';
+          this.binanceErrorMessage = privateResult.message || 'Error en las credenciales de la API.';
+        }
+      }
+    } catch (e: any) {
+      this.binanceStatus = 'disconnected';
+      this.binanceAuthStatus = 'unchecked';
+      this.binanceErrorMessage = e.message || 'Ocurrió un error inesperado al probar la API.';
+    } finally {
+      this.binanceLastChecked = new Date();
+    }
   }
 }
