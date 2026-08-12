@@ -55,11 +55,11 @@ firebase login
 Si aún no tienes un proyecto creado en Firebase Console, puedes crearlo directamente desde la línea de comandos.
 
 ```bash
-firebase projects:create --id "nombre-proyecto-unico" --title "Mi Aplicacion PWA"
+firebase projects:create nombre-proyecto-unico --display-name "Mi Aplicacion PWA"
 ```
 
-* **`--id`**: El identificador único global del proyecto (letras minúsculas, números y guiones).
-* **`--title`**: Nombre visible de tu proyecto en la consola de Firebase.
+* **`nombre-proyecto-unico`**: El identificador único global del proyecto (letras minúsculas, números y guiones).
+* **`--display-name`**: Nombre visible de tu proyecto en la consola de Firebase.
 
 ---
 
@@ -157,3 +157,34 @@ Este comando te devolverá un objeto JSON similar a este:
 ```
 
 Copia estas claves y colócalas en los archivos de entorno de tu aplicación Angular (`environment.ts` y `environment.prod.ts`) como se describe en la implementación de la aplicación.
+
+---
+
+## Solución de Problemas (Troubleshooting)
+
+### Error: `Could not load dependency vite in ./, have you run npm install?`
+
+**Problema:**
+En las versiones recientes de Firebase CLI, la funcionalidad experimental de detección y compilación automática de frameworks web (`webframeworks`) está activada. Al detectar ciertas configuraciones, el CLI intenta buscar `vite` como dependencia local para compilar el proyecto. Al ser un proyecto Angular e Ionic convencional, la inicialización falla inesperadamente con este error.
+
+**Solución 1: Deshabilitar el experimento de Frameworks Web en el CLI (Recomendado)**
+Puedes apagar este experimento global de Firebase Tools ejecutando:
+
+```bash
+firebase experiments:disable webframeworks
+```
+
+Una vez desactivado, ejecuta nuevamente la inicialización para configurar Hosting normalmente:
+
+```bash
+firebase init hosting
+```
+
+**Solución 2: Configuración Manual (Evitando el asistente del CLI)**
+Dado que una PWA de Ionic/Angular se compila como un sitio estático en la carpeta `www`, puedes omitir la inicialización interactiva creando los archivos de configuración manualmente en la raíz del proyecto. 
+
+*(Nota: Ya hemos generado estos archivos automáticamente en tu espacio de trabajo para corregir el error actual)*.
+
+* **[firebase.json](file:///c:/Users/abina/OneDrive/Documentos/04.Personal/01.Projects/Organizate/firebase.json)**: Configura las reglas de Firestore y apunta el Hosting a la carpeta `www` con redirección de rutas de Angular.
+* **[.firebaserc](file:///c:/Users/abina/OneDrive/Documentos/04.Personal/01.Projects/Organizate/.firebaserc)**: Vincula tu carpeta local con tu ID de proyecto de Firebase (`organizate-abinassar`).
+
