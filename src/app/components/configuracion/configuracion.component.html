@@ -1,0 +1,73 @@
+<ion-card class="config-card">
+  <div class="card-hero" [ngClass]="connectionStatus">
+    <div class="status-icon-container">
+      <ion-icon class="pulse-icon" *ngIf="connectionStatus === 'connected'" name="cloud-outline"></ion-icon>
+      <ion-icon class="pulse-icon" *ngIf="connectionStatus === 'disconnected'" name="cloud-offline-outline"></ion-icon>
+      <ion-spinner *ngIf="connectionStatus === 'testing'" name="crescent"></ion-spinner>
+      <ion-icon *ngIf="connectionStatus === 'unconfigured'" name="warning-outline"></ion-icon>
+    </div>
+    
+    <div class="hero-text">
+      <h2>Conectividad Firebase</h2>
+      <p *ngIf="connectionStatus === 'connected'">Sincronización online activa y funcional.</p>
+      <p *ngIf="connectionStatus === 'disconnected'">Modo Offline. Los cambios se guardarán localmente.</p>
+      <p *ngIf="connectionStatus === 'testing'">Verificando enlace con los servidores...</p>
+      <p *ngIf="connectionStatus === 'unconfigured'">Falta configurar variables de entorno en environment.ts</p>
+    </div>
+  </div>
+
+  <ion-card-content class="ion-no-padding">
+    <ion-list lines="inset">
+      <ion-item>
+        <ion-label>
+          <h3>Estado de Red</h3>
+          <p>Detección del navegador</p>
+        </ion-label>
+        <ion-badge slot="end" [color]="isBrowserOnline ? 'success' : 'danger'">
+          {{ isBrowserOnline ? 'Browser Online' : 'Browser Offline' }}
+        </ion-badge>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>
+          <h3>Base de Datos Firestore</h3>
+          <p>Configuración del proyecto</p>
+        </ion-label>
+        <ion-badge slot="end" [color]="firebaseInitialized ? 'primary' : 'warning'">
+          {{ firebaseInitialized ? 'Inicializado' : 'Sin Configurar' }}
+        </ion-badge>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>
+          <h3>Simular Offline (Firestore)</h3>
+          <p>Desactivar red en el SDK</p>
+        </ion-label>
+        <ion-toggle 
+          slot="end" 
+          [checked]="isOfflineSimulated" 
+          [disabled]="!firebaseInitialized"
+          (ionChange)="toggleOfflineSimulation($event)">
+        </ion-toggle>
+      </ion-item>
+
+      <ion-item *ngIf="lastChecked">
+        <ion-label>
+          <h3>Última Verificación</h3>
+          <p>{{ lastChecked | date:'mediumTime' }}</p>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+
+    <div class="action-container ion-padding">
+      <ion-button 
+        expand="block" 
+        [disabled]="connectionStatus === 'testing'" 
+        (click)="testConnection()"
+        class="refresh-btn">
+        <ion-icon slot="start" name="refresh-outline" [class.spinning]="connectionStatus === 'testing'"></ion-icon>
+        Probar Conexión
+      </ion-button>
+    </div>
+  </ion-card-content>
+</ion-card>

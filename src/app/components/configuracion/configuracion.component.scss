@@ -1,0 +1,98 @@
+.config-card {
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  margin: 16px;
+  overflow: hidden;
+  background: var(--ion-card-background, #fff);
+
+  .card-hero {
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: background 0.4s ease;
+    color: #fff;
+
+    &.connected { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+    &.disconnected { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+    &.testing { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); }
+    &.unconfigured { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+
+    .status-icon-container {
+      font-size: 48px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 80px;
+      width: 80px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(4px);
+
+      ion-icon { color: #fff; }
+      ion-spinner {
+        --color: #fff;
+        width: 40px;
+        height: 40px;
+      }
+    }
+
+    .hero-text {
+      h2 {
+        margin: 0 0 8px 0;
+        font-weight: 700;
+        font-size: 1.4rem;
+        letter-spacing: -0.5px;
+      }
+      p {
+        margin: 0;
+        font-size: 0.95rem;
+        opacity: 0.95;
+      }
+    }
+  }
+
+  ion-list {
+    background: transparent;
+    padding: 8px 0;
+  }
+
+  ion-item {
+    --background: transparent;
+    --padding-start: 16px;
+    --padding-end: 16px;
+    
+    h3 {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+    }
+    p { font-size: 0.8rem; }
+  }
+
+  .action-container {
+    background: var(--ion-card-background, #fff);
+  }
+
+  .refresh-btn {
+    --border-radius: 12px;
+    margin: 0;
+    font-weight: 600;
+    ion-icon { font-size: 20px; }
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.spinning { animation: spin 1s linear infinite; }
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.9; }
+}
+.pulse-icon { animation: pulse 2.5s ease-in-out infinite; }
+
