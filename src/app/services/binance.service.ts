@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
+import { Capacitor } from '@capacitor/core';
 
 @Injectable({
   providedIn: 'root'
@@ -23,6 +24,15 @@ export class BinanceService {
       this.isBinanceConfigured = true;
     } else {
       console.warn('Binance API credentials are not fully configured in environment.ts');
+    }
+
+    // Configurar base URL dinámica para evitar CORS:
+    // En plataformas nativas (Capacitor) no hay restricción de CORS al usar peticiones directas.
+    // En navegador web (local serve), usamos la ruta proxy '/binance-api'.
+    if (Capacitor.isNativePlatform()) {
+      this.baseUrl = 'https://api.binance.com';
+    } else {
+      this.baseUrl = '/binance-api';
     }
   }
 

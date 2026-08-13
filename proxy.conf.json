@@ -1,0 +1,10 @@
+{
+  "/binance-api": {
+    "target": "https://api.binance.com",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/binance-api": ""
+    }
+  }
+}
