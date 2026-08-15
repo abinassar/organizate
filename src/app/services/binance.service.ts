@@ -183,6 +183,75 @@ export class BinanceService {
   }
 
   /**
+   * Fetch P2P/C2C order history for a specific trade type (BUY or SELL).
+   */
+  async getP2POrderHistory(tradeType: 'BUY' | 'SELL', page: number = 1, rows: number = 100): Promise<any> {
+    if (!this.isBinanceConfigured) {
+      throw new Error('Las credenciales de Binance no están configuradas.');
+    }
+
+    try {
+      const serverTime = await this.getServerTime();
+      const timestamp = serverTime.toString();
+      
+      const queryString = `tradeType=${tradeType}&page=${page}&rows=${rows}&timestamp=${timestamp}`;
+      const signature = await this.computeHmacSha256(this.secretKey, queryString);
+      
+      const url = `${this.baseUrl}/sapi/v1/c2c/orderMatch/listUserOrderHistory?${queryString}&signature=${signature}`;
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        mode: 'cors',
+        headers: {
+          'X-MBX-APIKEY': this.apiKey
+        }
+      });
+      
+      if (!response.ok) {
+        let errorMessage = `HTTP Error ${response.status}`;
+        try {
+          const errData = await response.json();
+          if (errData && errData.msg) {
+            errorMessage = errData.msg;
+          }
+        } catch (_) {}
+        throw new Error(errorMessage);
+      }
+      
+      const data = await response.json();
+      return data;
+    } catch (error: any) {
+      console.error(`Error fetching P2P ${tradeType} history:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Consolidate last 50 P2P orders (BUY and SELL merged, sorted by createTime desc).
+   */
+  async getLast50P2POrders(): Promise<any[]> {
+    try {
+      const [buyRes, sellRes] = await Promise.all([
+        this.getP2POrderHistory('BUY', 1, 50),
+        this.getP2POrderHistory('SELL', 1, 50)
+      ]);
+      
+      const buyOrders = (buyRes && buyRes.data) || [];
+      const sellOrders = (sellRes && sellRes.data) || [];
+      
+      const mergedOrders = [...buyOrders, ...sellOrders];
+      
+      // Ordenar por createTime descendente
+      mergedOrders.sort((a, b) => b.createTime - a.createTime);
+      
+      return mergedOrders.slice(0, 50);
+    } catch (error: any) {
+      console.error('Error fetching consolidated P2P orders:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Helper to compute HMAC-SHA256 using the native Web Crypto API.
    */
   private async computeHmacSha256(key: string, message: string): Promise<string> {

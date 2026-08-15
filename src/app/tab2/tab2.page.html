@@ -1,17 +1,149 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Tab 2
-    </ion-title>
+  <ion-toolbar class="main-toolbar">
+    <ion-title>Operaciones P2P</ion-title>
+    <ion-spinner slot="end" name="crescent" *ngIf="isLoading" class="header-spinner"></ion-spinner>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" class="ion-padding-bottom">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">Tab 2</ion-title>
+      <ion-title size="large">Operaciones P2P</ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <app-explore-container name="Tab 2 page"></app-explore-container>
+  <!-- Pull to Refresh -->
+  <ion-refresher slot="fixed" (ionRefresh)="loadOrders($event)">
+    <ion-refresher-content 
+      pullingIcon="arrow-down-outline" 
+      pullingText="Desliza para actualizar" 
+      refreshingSpinner="crescent" 
+      refreshingText="Obteniendo transacciones...">
+    </ion-refresher-content>
+  </ion-refresher>
+
+  <!-- Si no está configurada la API -->
+  <div *ngIf="!binanceConfigured" class="info-container ion-padding">
+    <ion-card class="status-card unconfigured">
+      <div class="card-icon-header">
+        <ion-icon name="warning-outline"></ion-icon>
+      </div>
+      <ion-card-content class="ion-text-center">
+        <h2>Binance Sin Configurar</h2>
+        <p>Las claves de API (Key y Secret) no se encuentran configuradas en tu archivo de entorno o son inválidas.</p>
+        <p class="instruction-text">Por favor ve a la pestaña de <strong>Configuración</strong> para revisar el estado de tu cuenta e inicializar el servicio.</p>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <div *ngIf="binanceConfigured">
+    <!-- Barra de búsqueda y Filtros por Segmento -->
+    <div class="filter-wrapper">
+      <ion-searchbar 
+        placeholder="Buscar por usuario o moneda..." 
+        [value]="searchQuery"
+        (ionInput)="onSearchChange($event)"
+        class="custom-searchbar">
+      </ion-searchbar>
+
+      <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChange($event)" class="custom-segment">
+        <ion-segment-button value="all">
+          <ion-label>Todas</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="buy">
+          <ion-label>Compras</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="sell">
+          <ion-label>Ventas</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+    </div>
+
+    <!-- Mensaje de Error / CORS / Red -->
+    <div *ngIf="errorMessage" class="error-wrapper ion-padding">
+      <ion-card class="status-card error-card">
+        <div class="card-icon-header">
+          <ion-icon name="information-circle-outline" color="warning"></ion-icon>
+        </div>
+        <ion-card-content class="ion-text-center">
+          <h2>Error de Conexión</h2>
+          <p>{{ errorMessage }}</p>
+          <ion-button expand="block" (click)="loadOrders()" class="retry-btn">
+            <ion-icon slot="start" name="refresh-outline"></ion-icon>
+            Reintentar
+          </ion-button>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Spinner de carga central -->
+    <div *ngIf="isLoading && orders.length === 0" class="loader-wrapper ion-padding ion-text-center">
+      <ion-spinner name="crescent" class="main-spinner"></ion-spinner>
+      <p>Cargando últimas operaciones...</p>
+    </div>
+
+    <!-- Lista de transacciones -->
+    <div *ngIf="!isLoading && !errorMessage" class="list-wrapper">
+      <!-- Estado vacío si no hay órdenes -->
+      <div *ngIf="filteredOrders.length === 0" class="empty-state ion-padding ion-text-center">
+        <div class="empty-icon-container">
+          <ion-icon name="search-outline"></ion-icon>
+        </div>
+        <h3>Sin resultados</h3>
+        <p *ngIf="searchQuery || selectedSegment !== 'all'">Intenta cambiar los filtros o la búsqueda.</p>
+        <p *ngIf="!searchQuery && selectedSegment === 'all'">No se encontraron órdenes registradas en tu historial reciente.</p>
+      </div>
+
+      <ion-list lines="none" *ngIf="filteredOrders.length > 0" class="premium-list">
+        <div class="list-header-info">
+          <span>Mostrando {{ filteredOrders.length }} de {{ orders.length }} órdenes</span>
+        </div>
+
+        <ion-item *ngFor="let order of filteredOrders" class="p2p-item">
+          <!-- Icono de transacción (Compra/Venta) -->
+          <div slot="start" class="trade-icon-container" [ngClass]="order.tradeType.toLowerCase()">
+            <ion-icon [name]="order.tradeType === 'BUY' ? 'arrow-down-outline' : 'arrow-up-outline'"></ion-icon>
+          </div>
+
+          <!-- Información Central de la Orden -->
+          <ion-label class="p2p-label">
+            <div class="counterpart-title">
+              <h3>{{ order.counterPartNickName || 'Usuario Binance' }}</h3>
+              <ion-badge [color]="getStatusColor(order.orderStatus)" class="status-badge">
+                {{ getStatusLabel(order.orderStatus) }}
+              </ion-badge>
+            </div>
+            
+            <div class="order-subdetails">
+              <span class="order-date">{{ order.createTime | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span class="separator">•</span>
+              <span class="order-rate">
+                Tasa: {{ order.unitPrice | number:'1.2-8' }} {{ order.fiat }}
+              </span>
+            </div>
+            
+            <div class="order-id">
+              Nº {{ order.orderNumber }}
+            </div>
+          </ion-label>
+
+          <!-- Montos a la derecha -->
+          <div slot="end" class="amount-container ion-text-end">
+            <!-- Monto Fiat Principal -->
+            <div class="fiat-amount">
+              {{ order.totalPrice | number:'1.2-2' }} {{ order.fiatSymbol || order.fiat }}
+            </div>
+            <!-- Cripto Secundario -->
+            <div class="crypto-amount">
+              {{ order.amount | number:'1.2-8' }} {{ order.asset }}
+            </div>
+            <!-- Rol de Anuncio -->
+            <div class="user-role">
+              {{ order.advertisementRole === 'MAKER' ? 'Anunciante' : 'Taker' }}
+            </div>
+          </div>
+        </ion-item>
+      </ion-list>
+    </div>
+  </div>
 </ion-content>
