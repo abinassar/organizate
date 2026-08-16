@@ -1,0 +1,328 @@
+.config-card {
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  margin: 16px;
+  overflow: hidden;
+  background: var(--ion-card-background, #fff);
+
+  .card-hero {
+    padding: 32px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    transition: background 0.4s ease;
+    color: #fff;
+    // Degradado premium dorado/naranja para metas y trofeos
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+
+    .status-icon-container {
+      font-size: 48px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 80px;
+      width: 80px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      backdrop-filter: blur(4px);
+
+      ion-icon { color: #fff; }
+    }
+
+    .hero-text {
+      h2 {
+        margin: 0 0 8px 0;
+        font-weight: 700;
+        font-size: 1.4rem;
+        letter-spacing: -0.5px;
+      }
+      p {
+        margin: 0;
+        font-size: 0.95rem;
+        opacity: 0.95;
+      }
+    }
+  }
+
+  ion-list {
+    background: transparent;
+    padding: 8px 0;
+  }
+
+  ion-item {
+    --background: transparent;
+    --padding-start: 16px;
+    --padding-end: 16px;
+    
+    h3 {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+    }
+    .objetivo-description {
+      font-size: 0.82rem;
+      color: var(--ion-color-medium);
+      white-space: normal;
+      margin-bottom: 4px;
+    }
+  }
+
+  .action-container {
+    background: var(--ion-card-background, #fff);
+  }
+
+  .add-btn {
+    --background: #d97706;
+    --background-activated: #b45309;
+    --background-hover: #f59e0b;
+    --color: #fff;
+    --border-radius: 12px;
+    font-weight: 600;
+  }
+}
+
+.category-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  font-size: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  margin-right: 16px;
+}
+
+.objetivo-details {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  
+  .detail-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 0.72rem;
+
+    ion-icon {
+      font-size: 0.9rem;
+    }
+  }
+}
+
+.loading-container,
+.empty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  color: var(--ion-color-medium, #666);
+
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    color: var(--ion-color-light, #ccc);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.95rem;
+  }
+}
+
+// Estilos del Modal del Formulario
+.modal-content {
+  --background: var(--ion-background-color, #f4f5f8);
+  
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.form-field-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.form-item {
+  --border-radius: 12px;
+  --background: var(--ion-card-background, #fff);
+  --padding-start: 12px;
+  --border-width: 1px;
+  --border-color: var(--ion-color-light, #e0e0e0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  margin-bottom: 4px;
+
+  &.mini-item {
+    --background: var(--ion-background-color, #f9f9fa);
+    --border-radius: 8px;
+  }
+}
+
+.form-error-note {
+  font-size: 0.75rem;
+  padding: 2px 12px 0 12px;
+  font-weight: 500;
+}
+
+.type-hint {
+  .hint-text {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--ion-color-medium);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    ion-icon {
+      font-size: 1rem;
+      color: var(--ion-color-primary);
+    }
+  }
+}
+
+.submit-btn {
+  --border-radius: 12px;
+  font-weight: 600;
+  margin-top: 16px;
+}
+
+// Estilos específicos para la sección de Avisos
+.avisos-section {
+  border-top: 1px solid var(--ion-color-light, #e0e0e0);
+  padding-top: 16px;
+
+  .section-header {
+    margin-bottom: 16px;
+    
+    h3 {
+      font-weight: 700;
+      font-size: 1.1rem;
+      margin: 0 0 4px 0;
+      color: var(--ion-color-dark);
+    }
+    p {
+      margin: 0;
+      font-size: 0.82rem;
+      color: var(--ion-color-medium);
+    }
+  }
+}
+
+.sub-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ion-color-medium);
+  margin: 0 0 8px 0;
+}
+
+.avisos-list-container {
+  background: var(--ion-card-background, #fff);
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px dashed var(--ion-color-light, #ccc);
+
+  .temp-avisos-list {
+    background: transparent;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .aviso-item-card {
+    --background: var(--ion-background-color, #f4f5f8);
+    border-radius: 8px;
+    border-left: 4px solid var(--ion-color-secondary, #3b82f6);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+
+    h5 {
+      margin: 0 0 2px 0;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.75rem;
+      color: var(--ion-color-medium);
+      white-space: normal;
+    }
+  }
+
+  .aviso-percentage-badge {
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    min-width: 50px;
+    text-align: center;
+  }
+
+  .empty-avisos {
+    p {
+      font-size: 0.8rem;
+      color: var(--ion-color-medium);
+      margin: 0;
+      font-style: italic;
+    }
+  }
+}
+
+.aviso-form-card {
+  background: var(--ion-card-background, #fff);
+  border-radius: 12px;
+  border: 1px solid var(--ion-color-light, #e0e0e0);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+
+  .suffix-pct {
+    font-weight: 700;
+    color: var(--ion-color-medium);
+    padding-right: 12px;
+    font-size: 0.95rem;
+  }
+
+  .aviso-form-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+
+    ion-button {
+      --border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+  }
+}
+
+// Animación de pulso discreto para el icono del hero
+.pulse-icon {
+  animation: soft-pulse 2s infinite ease-in-out;
+}
+
+@keyframes soft-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

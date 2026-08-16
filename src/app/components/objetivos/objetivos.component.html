@@ -1,0 +1,302 @@
+<ion-card class="config-card objetivos-card">
+  <div class="card-hero">
+    <div class="status-icon-container">
+      <ion-icon class="pulse-icon" name="trophy-outline"></ion-icon>
+    </div>
+    
+    <div class="hero-text">
+      <h2>Objetivos Financieros</h2>
+      <p>Establece metas de ahorro, inversión o control de gastos y recibe avisos cuando te aproximes a ellas.</p>
+    </div>
+  </div>
+
+  <ion-card-content class="ion-no-padding">
+    <!-- Spinner de carga -->
+    <div class="loading-container ion-padding ion-text-center" *ngIf="isLoading">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Cargando objetivos financieros...</p>
+    </div>
+
+    <!-- Lista de objetivos -->
+    <ion-list lines="inset" *ngIf="!isLoading && objetivos.length > 0">
+      <ion-item *ngFor="let obj of objetivos" button (click)="openEditModal(obj)">
+        <!-- Badge de categoría asociada -->
+        <div slot="start" class="category-badge" 
+             [style.background-color]="getCategory(obj.categoryId)?.color || '#9e9e9e'"
+             [title]="getCategory(obj.categoryId)?.name || 'Sin Categoría'">
+          <ion-icon [name]="getCategory(obj.categoryId)?.icon || 'folder-open-outline'"></ion-icon>
+        </div>
+        
+        <ion-label>
+          <h3>{{ obj.name }}</h3>
+          <p class="objetivo-description">{{ obj.description }}</p>
+          
+          <div class="objetivo-details ion-margin-top">
+            <!-- Badge de Tipo de Objetivo -->
+            <ion-badge [color]="getTipo(obj.typeId)?.code === 'TIP-OBJ-0001' ? 'success' : 'warning'" class="detail-badge">
+              <ion-icon [name]="getTipo(obj.typeId)?.code === 'TIP-OBJ-0001' ? 'trending-up-outline' : 'trending-down-outline'"></ion-icon>
+              <span>{{ getTipo(obj.typeId)?.name || 'Desconocido' }}</span>
+            </ion-badge>
+
+            <!-- Badge de Avisos -->
+            <ion-badge color="medium" class="detail-badge" *ngIf="obj.alerts && obj.alerts.length > 0">
+              <ion-icon name="notifications-outline"></ion-icon>
+              <span>{{ obj.alerts.length }} {{ obj.alerts.length === 1 ? 'aviso' : 'avisos' }}</span>
+            </ion-badge>
+            <ion-badge color="light" class="detail-badge" *ngIf="!obj.alerts || obj.alerts.length === 0">
+              <span>Sin avisos</span>
+            </ion-badge>
+          </div>
+        </ion-label>
+
+        <ion-buttons slot="end">
+          <ion-button color="medium" fill="clear" (click)="$event.stopPropagation(); openEditModal(obj)">
+            <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
+          </ion-button>
+          <ion-button color="danger" fill="clear" (click)="confirmDelete($event, obj)">
+            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-item>
+    </ion-list>
+
+    <!-- Estado vacío -->
+    <div class="empty-container ion-padding ion-text-center" *ngIf="!isLoading && objetivos.length === 0">
+      <ion-icon name="trophy-outline" class="empty-icon"></ion-icon>
+      <p>No tienes objetivos financieros creados aún. ¡Establece tu primer objetivo!</p>
+    </div>
+
+    <!-- Botón Agregar -->
+    <div class="action-container ion-padding">
+      <ion-button 
+        expand="block" 
+        (click)="openAddModal()"
+        class="add-btn">
+        <ion-icon slot="start" name="add-outline"></ion-icon>
+        Agregar Objetivo Financiero
+      </ion-button>
+    </div>
+  </ion-card-content>
+</ion-card>
+
+<!-- Modal de Formulario -->
+<ion-modal [isOpen]="isModalOpen" (didDismiss)="onModalDismiss()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-buttons slot="start">
+          <ion-button (click)="closeModal()">
+            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <ion-title>{{ editingObjetivo ? 'Editar Objetivo' : 'Nuevo Objetivo' }}</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding modal-content">
+      <!-- Formulario Principal -->
+      <form [formGroup]="objetivoForm" (ngSubmit)="saveObjetivo()">
+        
+        <!-- Nombre -->
+        <div class="form-field-container ion-margin-bottom">
+          <ion-item fill="outline" class="form-item">
+            <ion-label position="floating">Nombre del Objetivo</ion-label>
+            <ion-input formControlName="name" placeholder="Ej. Ahorro para Vacaciones, Límite Compras..."></ion-input>
+          </ion-item>
+          <ion-note 
+            *ngIf="objetivoForm.get('name')?.invalid && objetivoForm.get('name')?.touched" 
+            color="danger" 
+            class="form-error-note">
+            <span *ngIf="objetivoForm.get('name')?.errors?.['required']">El nombre es requerido.</span>
+            <span *ngIf="objetivoForm.get('name')?.errors?.['minlength']">Mínimo 2 caracteres.</span>
+            <span *ngIf="objetivoForm.get('name')?.errors?.['maxlength']">Máximo 50 caracteres.</span>
+          </ion-note>
+        </div>
+
+        <!-- Descripción -->
+        <div class="form-field-container ion-margin-bottom">
+          <ion-item fill="outline" class="form-item">
+            <ion-label position="floating">Descripción</ion-label>
+            <ion-textarea formControlName="description" placeholder="Describe brevemente de qué trata este objetivo..."></ion-textarea>
+          </ion-item>
+          <ion-note 
+            *ngIf="objetivoForm.get('description')?.invalid && objetivoForm.get('description')?.touched" 
+            color="danger" 
+            class="form-error-note">
+            <span *ngIf="objetivoForm.get('description')?.errors?.['required']">La descripción es requerida.</span>
+            <span *ngIf="objetivoForm.get('description')?.errors?.['maxlength']">Máximo 200 caracteres.</span>
+          </ion-note>
+        </div>
+
+        <!-- Selector de Categoría -->
+        <div class="form-field-container ion-margin-bottom">
+          <ion-item fill="outline" class="form-item">
+            <ion-label position="floating">Categoría Relacionada</ion-label>
+            <ion-select formControlName="categoryId" placeholder="Seleccione una categoría" okText="Seleccionar" cancelText="Cancelar">
+              <ion-select-option *ngFor="let cat of categories" [value]="cat.id">
+                {{ cat.name }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+          <ion-note 
+            *ngIf="objetivoForm.get('categoryId')?.invalid && objetivoForm.get('categoryId')?.touched" 
+            color="danger" 
+            class="form-error-note">
+            <span>Debe seleccionar una categoría.</span>
+          </ion-note>
+        </div>
+
+        <!-- Selector de Tipo de Objetivo -->
+        <div class="form-field-container ion-margin-bottom">
+          <ion-item fill="outline" class="form-item">
+            <ion-label position="floating">Tipo de Objetivo</ion-label>
+            <ion-select formControlName="typeId" placeholder="Seleccione un tipo" okText="Seleccionar" cancelText="Cancelar">
+              <ion-select-option *ngFor="let tipo of tiposObjetivos" [value]="tipo.id">
+                {{ tipo.name }} ({{ tipo.code }})
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+          
+          <!-- Ayuda sobre el tipo seleccionado -->
+          <div class="type-hint ion-padding-start ion-padding-end ion-margin-top" *ngIf="objetivoForm.get('typeId')?.value">
+            <p class="hint-text">
+              <ion-icon name="alert-circle-outline"></ion-icon>
+              {{ getTipo(objetivoForm.get('typeId')?.value)?.description }}
+            </p>
+          </div>
+          
+          <ion-note 
+            *ngIf="objetivoForm.get('typeId')?.invalid && objetivoForm.get('typeId')?.touched" 
+            color="danger" 
+            class="form-error-note">
+            <span>Debe seleccionar un tipo de objetivo.</span>
+          </ion-note>
+        </div>
+
+        <!-- SECCIÓN DE AVISOS (ALERTAS) -->
+        <div class="avisos-section ion-margin-top ion-margin-bottom">
+          <div class="section-header">
+            <h3>Avisos y Alertas (Opcional)</h3>
+            <p>Define alertas de notificación basadas en el porcentaje alcanzado.</p>
+          </div>
+
+          <!-- Listado de avisos agregados -->
+          <div class="avisos-list-container ion-margin-bottom">
+            <h4 class="sub-label">Avisos Configurados ({{ tempAlerts.length }})</h4>
+            
+            <ion-list lines="none" *ngIf="tempAlerts.length > 0" class="temp-avisos-list">
+              <ion-item *ngFor="let aviso of tempAlerts; let idx = index" class="aviso-item-card">
+                <ion-badge color="secondary" slot="start" class="aviso-percentage-badge">
+                  {{ (aviso.percentage * 100) | number:'1.0-0' }}%
+                </ion-badge>
+                
+                <ion-label>
+                  <h5>{{ aviso.name }}</h5>
+                  <p>{{ aviso.description }}</p>
+                </ion-label>
+                
+                <ion-buttons slot="end">
+                  <ion-button color="medium" fill="clear" (click)="editAviso(idx)">
+                    <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
+                  </ion-button>
+                  <ion-button color="danger" fill="clear" (click)="deleteAviso(idx)">
+                    <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+                  </ion-button>
+                </ion-buttons>
+              </ion-item>
+            </ion-list>
+
+            <div class="empty-avisos ion-padding ion-text-center" *ngIf="tempAlerts.length === 0">
+              <p>No se han agregado avisos a este objetivo. Puedes añadir varios abajo.</p>
+            </div>
+          </div>
+
+          <!-- Mini Formulario de Añadir/Editar Aviso -->
+          <div class="aviso-form-card ion-padding">
+            <h4 class="sub-label">{{ editingAvisoIndex !== null ? 'Editar Aviso' : 'Agregar Nuevo Aviso' }}</h4>
+            
+            <form [formGroup]="avisoForm" (ngSubmit)="$event.preventDefault(); addOrUpdateAviso()">
+              <div class="form-field-container ion-margin-bottom">
+                <ion-item fill="outline" class="form-item mini-item">
+                  <ion-label position="floating">Nombre del Aviso</ion-label>
+                  <ion-input formControlName="avisoName" placeholder="Ej. Alerta 80%, Meta Casi Lista..."></ion-input>
+                </ion-item>
+                <ion-note 
+                  *ngIf="avisoForm.get('avisoName')?.invalid && avisoForm.get('avisoName')?.touched" 
+                  color="danger" 
+                  class="form-error-note">
+                  <span>El nombre del aviso es requerido.</span>
+                </ion-note>
+                <ion-note *ngIf="isAvisoNameDuplicate() && avisoForm.get('avisoName')?.value" color="danger" class="form-error-note">
+                  <span>Ya existe un aviso con este nombre en este objetivo.</span>
+                </ion-note>
+              </div>
+
+              <div class="form-field-container ion-margin-bottom">
+                <ion-item fill="outline" class="form-item mini-item">
+                  <ion-label position="floating">Descripción del Aviso</ion-label>
+                  <ion-textarea formControlName="avisoDescription" placeholder="Ej. Hemos alcanzado el 80% de la meta de ahorro..."></ion-textarea>
+                </ion-item>
+                <ion-note 
+                  *ngIf="avisoForm.get('avisoDescription')?.invalid && avisoForm.get('avisoDescription')?.touched" 
+                  color="danger" 
+                  class="form-error-note">
+                  <span>La descripción del aviso es requerida.</span>
+                </ion-note>
+              </div>
+
+              <div class="form-field-container ion-margin-bottom">
+                <ion-item fill="outline" class="form-item mini-item">
+                  <ion-label position="floating">Porcentaje (1 - 100%)</ion-label>
+                  <ion-input type="number" formControlName="avisoPercentage" placeholder="Ej. 80"></ion-input>
+                  <span slot="end" class="suffix-pct">%</span>
+                </ion-item>
+                <ion-note 
+                  *ngIf="avisoForm.get('avisoPercentage')?.invalid && avisoForm.get('avisoPercentage')?.touched" 
+                  color="danger" 
+                  class="form-error-note">
+                  <span>Ingrese un porcentaje válido entre 1 y 100.</span>
+                </ion-note>
+                <ion-note *ngIf="isAvisoPercentageDuplicate() && avisoForm.get('avisoPercentage')?.value" color="danger" class="form-error-note">
+                  <span>Ya existe un aviso con este porcentaje en este objetivo.</span>
+                </ion-note>
+              </div>
+
+              <div class="aviso-form-buttons ion-text-end">
+                <ion-button 
+                  type="button" 
+                  fill="clear" 
+                  color="medium" 
+                  *ngIf="editingAvisoIndex !== null" 
+                  (click)="cancelEditAviso()">
+                  Cancelar
+                </ion-button>
+                
+                <ion-button 
+                  type="submit" 
+                  [color]="editingAvisoIndex !== null ? 'success' : 'secondary'"
+                  [disabled]="avisoForm.invalid || isAvisoNameDuplicate() || isAvisoPercentageDuplicate()">
+                  <ion-icon slot="start" [name]="editingAvisoIndex !== null ? 'checkmark-outline' : 'add-outline'"></ion-icon>
+                  {{ editingAvisoIndex !== null ? 'Actualizar Aviso' : 'Añadir Aviso' }}
+                </ion-button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Botón de Guardado Principal del Objetivo -->
+        <div class="modal-actions ion-margin-top">
+          <ion-button 
+            expand="block" 
+            type="submit" 
+            [disabled]="objetivoForm.invalid" 
+            class="submit-btn">
+            <ion-icon slot="start" name="checkmark-outline"></ion-icon>
+            {{ editingObjetivo ? 'Guardar Cambios' : 'Crear Objetivo Financiero' }}
+          </ion-button>
+        </div>
+
+      </form>
+    </ion-content>
+  </ng-template>
+</ion-modal>
