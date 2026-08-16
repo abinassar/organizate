@@ -1,0 +1,166 @@
+<ion-card class="config-card categories-card">
+  <div class="card-hero">
+    <div class="status-icon-container">
+      <ion-icon class="pulse-icon" name="pricetags-outline"></ion-icon>
+    </div>
+    
+    <div class="hero-text">
+      <h2>Mantenedor de Categorías</h2>
+      <p>Organiza tus transacciones y movimientos clasificándolos por categorías.</p>
+    </div>
+  </div>
+
+  <ion-card-content class="ion-no-padding">
+    <!-- Spinner de carga -->
+    <div class="loading-container ion-padding ion-text-center" *ngIf="isLoading">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Cargando categorías...</p>
+    </div>
+
+    <!-- Lista de categorías -->
+    <ion-list lines="inset" *ngIf="!isLoading && categories.length > 0">
+      <ion-item *ngFor="let category of categories" button (click)="openEditModal(category)">
+        <div slot="start" class="category-badge" [style.background-color]="category.color">
+          <ion-icon [name]="category.icon"></ion-icon>
+        </div>
+        <ion-label>
+          <h3>{{ category.name }}</h3>
+          <p>{{ category.description || 'Sin descripción' }}</p>
+        </ion-label>
+        <ion-buttons slot="end">
+          <ion-button color="medium" fill="clear" (click)="$event.stopPropagation(); openEditModal(category)">
+            <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
+          </ion-button>
+          <ion-button color="danger" fill="clear" (click)="confirmDelete($event, category)">
+            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-item>
+    </ion-list>
+
+    <!-- Estado vacío -->
+    <div class="empty-container ion-padding ion-text-center" *ngIf="!isLoading && categories.length === 0">
+      <ion-icon name="folder-open-outline" class="empty-icon"></ion-icon>
+      <p>No tienes categorías registradas aún. ¡Crea la primera!</p>
+    </div>
+
+    <!-- Botón Agregar -->
+    <div class="action-container ion-padding">
+      <ion-button 
+        expand="block" 
+        (click)="openAddModal()"
+        class="add-btn">
+        <ion-icon slot="start" name="add-outline"></ion-icon>
+        Agregar Categoría
+      </ion-button>
+    </div>
+  </ion-card-content>
+</ion-card>
+
+<!-- Modal de Formulario -->
+<ion-modal [isOpen]="isModalOpen" (didDismiss)="onModalDismiss()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-buttons slot="start">
+          <ion-button (click)="closeModal()">
+            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <ion-title>{{ editingCategory ? 'Editar Categoría' : 'Nueva Categoría' }}</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding modal-content">
+      <form [formGroup]="categoryForm" (ngSubmit)="saveCategory()">
+        
+        <!-- Vista previa de la Categoría -->
+        <div class="category-preview-section">
+          <div class="preview-badge-container">
+            <div class="preview-badge" [style.background-color]="selectedColor">
+              <ion-icon [name]="selectedIcon"></ion-icon>
+            </div>
+            <h3>{{ categoryForm.get('name')?.value || 'Nueva Categoría' }}</h3>
+            <p class="preview-desc">{{ categoryForm.get('description')?.value || 'Completa los campos abajo' }}</p>
+          </div>
+        </div>
+
+        <!-- Nombre -->
+        <div class="form-field-container ion-margin-bottom">
+          <ion-item fill="outline" class="form-item">
+            <ion-label position="floating">Nombre de Categoría</ion-label>
+            <ion-input formControlName="name" placeholder="Ej. Compras, Salarios..."></ion-input>
+          </ion-item>
+          <ion-note 
+            *ngIf="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched" 
+            color="danger" 
+            class="form-error-note">
+            <span *ngIf="categoryForm.get('name')?.errors?.['required']">El nombre es requerido.</span>
+            <span *ngIf="categoryForm.get('name')?.errors?.['minlength']">Mínimo 2 caracteres.</span>
+            <span *ngIf="categoryForm.get('name')?.errors?.['maxlength']">Máximo 30 caracteres.</span>
+            <span *ngIf="categoryForm.get('name')?.errors?.['duplicateName']">Ya existe una categoría con este nombre.</span>
+          </ion-note>
+        </div>
+
+        <!-- Descripción -->
+        <ion-item fill="outline" class="form-item ion-margin-bottom">
+          <ion-label position="floating">Descripción</ion-label>
+          <ion-textarea formControlName="description" placeholder="Breve detalle de la categoría..."></ion-textarea>
+        </ion-item>
+
+        <!-- Selector de Color -->
+        <div class="picker-section ion-margin-bottom">
+          <ion-label class="picker-label">Color de Identificación</ion-label>
+          <div class="color-picker-grid">
+            <button 
+              type="button"
+              *ngFor="let color of presetColors" 
+              class="preset-color-dot"
+              [style.background-color]="color"
+              [class.active]="selectedColor === color"
+              (click)="selectColor(color)">
+              <ion-icon name="checkmark-outline" *ngIf="selectedColor === color"></ion-icon>
+            </button>
+            
+            <!-- Selector personalizado -->
+            <div class="custom-color-dot">
+              <input 
+                type="color" 
+                id="custom-picker" 
+                [value]="selectedColor" 
+                (change)="onCustomColorChange($event)" />
+              <label for="custom-picker" [style.background-color]="selectedColor">
+                <ion-icon name="color-palette-outline"></ion-icon>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Selector de Íconos -->
+        <div class="picker-section ion-margin-bottom">
+          <ion-label class="picker-label">Selecciona un Ícono</ion-label>
+          <div class="icon-picker-grid">
+            <button 
+              type="button"
+              *ngFor="let icon of presetIcons" 
+              class="preset-icon-btn"
+              [class.active]="selectedIcon === icon"
+              [style.color]="selectedIcon === icon ? selectedColor : null"
+              [style.border-color]="selectedIcon === icon ? selectedColor : null"
+              (click)="selectIcon(icon)">
+              <ion-icon [name]="icon"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="modal-actions ion-margin-top">
+          <ion-button expand="block" type="submit" [disabled]="categoryForm.invalid" class="submit-btn">
+            {{ editingCategory ? 'Guardar Cambios' : 'Crear Categoría' }}
+          </ion-button>
+        </div>
+
+      </form>
+    </ion-content>
+  </ng-template>
+</ion-modal>
