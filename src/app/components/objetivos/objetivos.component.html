@@ -32,6 +32,23 @@
           <p class="objetivo-description">{{ obj.description }}</p>
           
           <div class="objetivo-details ion-margin-top">
+            <!-- Badge de Monto y Moneda -->
+            <ion-badge color="primary" class="detail-badge amount-badge">
+              <ion-icon name="cash-outline"></ion-icon>
+              <span>{{ obj.amount | number:'1.2-2' }} {{ getUnit(obj.unitId)?.name || '' }}</span>
+            </ion-badge>
+
+            <!-- Badge de Periodicidad / Fechas -->
+            <ion-badge color="tertiary" class="detail-badge">
+              <ion-icon name="calendar-outline"></ion-icon>
+              <span *ngIf="getPeriodicity(obj.periodicityId)?.code !== 'PER-OBJ-0003'">
+                {{ getPeriodicity(obj.periodicityId)?.name }}
+              </span>
+              <span *ngIf="getPeriodicity(obj.periodicityId)?.code === 'PER-OBJ-0003'">
+                {{ obj.startDate | date:'dd/MM/yyyy' }} - {{ obj.endDate | date:'dd/MM/yyyy' }}
+              </span>
+            </ion-badge>
+
             <!-- Badge de Tipo de Objetivo -->
             <ion-badge [color]="getTipo(obj.typeId)?.code === 'TIP-OBJ-0001' ? 'success' : 'warning'" class="detail-badge">
               <ion-icon [name]="getTipo(obj.typeId)?.code === 'TIP-OBJ-0001' ? 'trending-up-outline' : 'trending-down-outline'"></ion-icon>
@@ -128,6 +145,42 @@
           </ion-note>
         </div>
 
+        <!-- Grupo de Monto y Unidad (Moneda) -->
+        <div class="form-row ion-margin-bottom">
+          <!-- Monto Total -->
+          <div class="form-field-container form-col-8">
+            <ion-item fill="outline" class="form-item">
+              <ion-label position="floating">Monto Total</ion-label>
+              <ion-input type="number" formControlName="amount" placeholder="Ej. 5000"></ion-input>
+            </ion-item>
+            <ion-note 
+              *ngIf="objetivoForm.get('amount')?.invalid && objetivoForm.get('amount')?.touched" 
+              color="danger" 
+              class="form-error-note">
+              <span *ngIf="objetivoForm.get('amount')?.errors?.['required']">El monto es requerido.</span>
+              <span *ngIf="objetivoForm.get('amount')?.errors?.['min']">Debe ser mayor a 0.</span>
+            </ion-note>
+          </div>
+
+          <!-- Unidad de Moneda -->
+          <div class="form-field-container form-col-4">
+            <ion-item fill="outline" class="form-item">
+              <ion-label position="floating">Moneda</ion-label>
+              <ion-select formControlName="unitId" placeholder="Unidad" okText="Seleccionar" cancelText="Cancelar">
+                <ion-select-option *ngFor="let unit of unidadesMonto" [value]="unit.id">
+                  {{ unit.name }}
+                </ion-select-option>
+              </ion-select>
+            </ion-item>
+            <ion-note 
+              *ngIf="objetivoForm.get('unitId')?.invalid && objetivoForm.get('unitId')?.touched" 
+              color="danger" 
+              class="form-error-note">
+              <span>Requerido.</span>
+            </ion-note>
+          </div>
+        </div>
+
         <!-- Selector de Categoría -->
         <div class="form-field-container ion-margin-bottom">
           <ion-item fill="outline" class="form-item">
@@ -157,7 +210,6 @@
             </ion-select>
           </ion-item>
           
-          <!-- Ayuda sobre el tipo seleccionado -->
           <div class="type-hint ion-padding-start ion-padding-end ion-margin-top" *ngIf="objetivoForm.get('typeId')?.value">
             <p class="hint-text">
               <ion-icon name="alert-circle-outline"></ion-icon>
@@ -173,11 +225,70 @@
           </ion-note>
         </div>
 
+        <!-- Selector de Periodicidad -->
+        <div class="form-field-container ion-margin-bottom">
+          <ion-item fill="outline" class="form-item">
+            <ion-label position="floating">Periodicidad del Objetivo</ion-label>
+            <ion-select formControlName="periodicityId" placeholder="Seleccione periodicidad" okText="Seleccionar" cancelText="Cancelar">
+              <ion-select-option *ngFor="let p of periodicidades" [value]="p.id">
+                {{ p.name }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+          <ion-note 
+            *ngIf="objetivoForm.get('periodicityId')?.invalid && objetivoForm.get('periodicityId')?.touched" 
+            color="danger" 
+            class="form-error-note">
+            <span>Debe seleccionar la periodicidad.</span>
+          </ion-note>
+        </div>
+
+        <!-- Rango de Fechas Condicional -->
+        <div class="form-row ion-margin-bottom date-range-container" 
+             *ngIf="getPeriodicity(objetivoForm.get('periodicityId')?.value)?.code === 'PER-OBJ-0003'">
+          
+          <!-- Fecha Inicio -->
+          <div class="form-field-container form-col-6">
+            <ion-item fill="outline" class="form-item">
+              <ion-label position="stacked">Fecha de Inicio</ion-label>
+              <ion-input type="date" formControlName="startDate"></ion-input>
+            </ion-item>
+            <ion-note 
+              *ngIf="objetivoForm.get('startDate')?.invalid && objetivoForm.get('startDate')?.touched" 
+              color="danger" 
+              class="form-error-note">
+              <span>Requerido.</span>
+            </ion-note>
+          </div>
+
+          <!-- Fecha Fin -->
+          <div class="form-field-container form-col-6">
+            <ion-item fill="outline" class="form-item">
+              <ion-label position="stacked">Fecha de Fin</ion-label>
+              <ion-input type="date" formControlName="endDate"></ion-input>
+            </ion-item>
+            <ion-note 
+              *ngIf="objetivoForm.get('endDate')?.invalid && objetivoForm.get('endDate')?.touched" 
+              color="danger" 
+              class="form-error-note">
+              <span>Requerido.</span>
+            </ion-note>
+          </div>
+
+          <!-- Validación de fechas -->
+          <div class="form-col-12" *ngIf="isDateRangeInvalid()">
+            <ion-note color="danger" class="form-error-note date-error-block">
+              <ion-icon name="warning-outline"></ion-icon>
+              La fecha de fin debe ser posterior o igual a la fecha de inicio.
+            </ion-note>
+          </div>
+        </div>
+
         <!-- SECCIÓN DE AVISOS (ALERTAS) -->
         <div class="avisos-section ion-margin-top ion-margin-bottom">
           <div class="section-header">
             <h3>Avisos y Alertas (Opcional)</h3>
-            <p>Define alertas de notificación basadas en el porcentaje alcanzado.</p>
+            <p>Define alertas de notificación basadas en el porcentaje alcanzado del objetivo.</p>
           </div>
 
           <!-- Listado de avisos agregados -->
@@ -235,7 +346,7 @@
               <div class="form-field-container ion-margin-bottom">
                 <ion-item fill="outline" class="form-item mini-item">
                   <ion-label position="floating">Descripción del Aviso</ion-label>
-                  <ion-textarea formControlName="avisoDescription" placeholder="Ej. Hemos alcanzado el 80% de la meta de ahorro..."></ion-textarea>
+                  <ion-textarea formControlName="avisoDescription" placeholder="Ej. Hemos alcanzado el 80% de la meta..."></ion-textarea>
                 </ion-item>
                 <ion-note 
                   *ngIf="avisoForm.get('avisoDescription')?.invalid && avisoForm.get('avisoDescription')?.touched" 
@@ -289,7 +400,7 @@
           <ion-button 
             expand="block" 
             type="submit" 
-            [disabled]="objetivoForm.invalid" 
+            [disabled]="objetivoForm.invalid || isDateRangeInvalid()" 
             class="submit-btn">
             <ion-icon slot="start" name="checkmark-outline"></ion-icon>
             {{ editingObjetivo ? 'Guardar Cambios' : 'Crear Objetivo Financiero' }}

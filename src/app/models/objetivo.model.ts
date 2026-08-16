@@ -12,6 +12,11 @@ export interface Objetivo {
   categoryName?: string;
   typeId: string;
   typeCode?: string;
+  periodicityId: string;
+  amount: number;
+  unitId: string;
+  startDate?: Date;
+  endDate?: Date;
   alerts: Aviso[];
   active: boolean;
   createdAt?: Date;

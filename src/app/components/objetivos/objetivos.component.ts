@@ -38,15 +38,21 @@ import {
   notificationsOutline, 
   listOutline,
   warningOutline,
-  folderOpenOutline
+  folderOpenOutline,
+  calendarOutline,
+  cashOutline
 } from 'ionicons/icons';
-import { Subscription, forkJoin } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { CategoryService } from '../../services/category.service';
 import { TipoObjetivoService } from '../../services/tipo-objetivo.service';
+import { PeriodicityService } from '../../services/periodicity.service';
+import { AmountUnitService } from '../../services/amount-unit.service';
 import { ObjetivoService } from '../../services/objetivo.service';
 import { Category } from '../../models/category.model';
 import { TipoObjetivo } from '../../models/tipo-objetivo.model';
-import { Objetivo, Aviso } from '../..//models/objetivo.model';
+import { Periodicity } from '../../models/periodicity.model';
+import { AmountUnit } from '../../models/amount-unit.model';
+import { Objetivo, Aviso } from '../../models/objetivo.model';
 
 @Component({
   selector: 'app-objetivos',
@@ -82,6 +88,8 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
   objetivos: Objetivo[] = [];
   categories: Category[] = [];
   tiposObjetivos: TipoObjetivo[] = [];
+  periodicidades: Periodicity[] = [];
+  unidadesMonto: AmountUnit[] = [];
   
   isLoading = true;
   isModalOpen = false;
@@ -90,7 +98,6 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
   objetivoForm!: FormGroup;
   avisoForm!: FormGroup;
   
-  // Lista temporal de avisos del objetivo actual en edición/creación
   tempAlerts: Aviso[] = [];
   editingAvisoIndex: number | null = null;
 
@@ -99,6 +106,8 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private categoryService = inject(CategoryService);
   private tipoObjetivoService = inject(TipoObjetivoService);
+  private periodicityService = inject(PeriodicityService);
+  private amountUnitService = inject(AmountUnitService);
   private objetivoService = inject(ObjetivoService);
   private alertController = inject(AlertController);
 
@@ -116,14 +125,15 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
       notificationsOutline,
       listOutline,
       warningOutline,
-      folderOpenOutline
+      folderOpenOutline,
+      calendarOutline,
+      cashOutline
     });
     
     this.initForms();
   }
 
   ngOnInit() {
-    // Escuchar cambios de Firestore para Categorías, Tipos de Objetivos y Objetivos
     this.subscriptions.add(
       this.categoryService.getCategories().subscribe({
         next: (cats) => {
@@ -145,6 +155,26 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
     );
 
     this.subscriptions.add(
+      this.periodicityService.getPeriodicities().subscribe({
+        next: (periods) => {
+          this.periodicidades = periods;
+          this.checkLoadingState();
+        },
+        error: (err) => console.error('Error al cargar periodicidades:', err)
+      })
+    );
+
+    this.subscriptions.add(
+      this.amountUnitService.getAmountUnits().subscribe({
+        next: (units) => {
+          this.unidadesMonto = units;
+          this.checkLoadingState();
+        },
+        error: (err) => console.error('Error al cargar unidades de monto:', err)
+      })
+    );
+
+    this.subscriptions.add(
       this.objetivoService.getObjetivos().subscribe({
         next: (objs) => {
           this.objetivos = objs;
@@ -160,9 +190,13 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
   }
 
   private checkLoadingState() {
-    // Dejar de mostrar spinner una vez cargadas las tres colecciones
-    if (this.categories !== undefined && this.tiposObjetivos !== undefined && this.objetivos !== undefined) {
-      // Pequeña espera para evitar parpadeos bruscos
+    if (
+      this.categories !== undefined && 
+      this.tiposObjetivos !== undefined && 
+      this.periodicidades !== undefined && 
+      this.unidadesMonto !== undefined && 
+      this.objetivos !== undefined
+    ) {
       setTimeout(() => {
         this.isLoading = false;
       }, 300);
@@ -174,14 +208,45 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
       description: ['', [Validators.required, Validators.maxLength(200)]],
       categoryId: ['', [Validators.required]],
-      typeId: ['', [Validators.required]]
+      typeId: ['', [Validators.required]],
+      periodicityId: ['', [Validators.required]],
+      amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
+      unitId: ['', [Validators.required]],
+      startDate: [''],
+      endDate: ['']
     });
+
+    // Escuchar el cambio en la periodicidad para ajustar dinámicamente las validaciones de fecha
+    this.subscriptions.add(
+      this.objetivoForm.get('periodicityId')?.valueChanges.subscribe(value => {
+        this.onPeriodicityChange(value);
+      })
+    );
 
     this.avisoForm = this.fb.group({
       avisoName: ['', [Validators.required, Validators.maxLength(50)]],
       avisoDescription: ['', [Validators.required, Validators.maxLength(150)]],
       avisoPercentage: [null as number | null, [Validators.required, Validators.min(1), Validators.max(100)]]
     });
+  }
+
+  private onPeriodicityChange(periodicityId: string) {
+    const periodicity = this.getPeriodicity(periodicityId);
+    const startCtrl = this.objetivoForm.get('startDate');
+    const endCtrl = this.objetivoForm.get('endDate');
+
+    if (periodicity?.code === 'PER-OBJ-0003') { // Rango de fechas
+      startCtrl?.setValidators([Validators.required]);
+      endCtrl?.setValidators([Validators.required]);
+    } else {
+      startCtrl?.clearValidators();
+      endCtrl?.clearValidators();
+      startCtrl?.setValue('');
+      endCtrl?.setValue('');
+    }
+
+    startCtrl?.updateValueAndValidity();
+    endCtrl?.updateValueAndValidity();
   }
 
   // --- Mapeos Auxiliares para UI ---
@@ -192,6 +257,37 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
 
   getTipo(id: string): TipoObjetivo | undefined {
     return this.tiposObjetivos.find(t => t.id === id);
+  }
+
+  getPeriodicity(id: string): Periodicity | undefined {
+    return this.periodicidades.find(p => p.id === id);
+  }
+
+  getUnit(id: string): AmountUnit | undefined {
+    return this.unidadesMonto.find(u => u.id === id);
+  }
+
+  // Formateador de fechas para inputs de HTML
+  formatDateForInput(date?: Date): string {
+    if (!date) return '';
+    const d = new Date(date);
+    const month = '' + (d.getMonth() + 1);
+    const day = '' + d.getDate();
+    const year = d.getFullYear();
+    return [year, month.padStart(2, '0'), day.padStart(2, '0')].join('-');
+  }
+
+  isDateRangeInvalid(): boolean {
+    const periodicity = this.getPeriodicity(this.objetivoForm.get('periodicityId')?.value);
+    if (periodicity?.code !== 'PER-OBJ-0003') return false;
+
+    const startVal = this.objetivoForm.get('startDate')?.value;
+    const endVal = this.objetivoForm.get('endDate')?.value;
+    if (!startVal || !endVal) return false;
+
+    const start = new Date(startVal + 'T00:00:00');
+    const end = new Date(endVal + 'T00:00:00');
+    return end < start;
   }
 
   // --- Gestión de Avisos Temporales ---
@@ -225,19 +321,16 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
     const nuevoAviso: Aviso = {
       name: formVal.avisoName.trim(),
       description: formVal.avisoDescription.trim(),
-      percentage: formVal.avisoPercentage / 100 // Convertir a decimal antes de guardarlo
+      percentage: formVal.avisoPercentage / 100
     };
 
     if (this.editingAvisoIndex !== null) {
-      // Modo Edición
       this.tempAlerts[this.editingAvisoIndex] = nuevoAviso;
       this.editingAvisoIndex = null;
     } else {
-      // Modo Creación
       this.tempAlerts.push(nuevoAviso);
     }
 
-    // Resetear formulario de avisos
     this.avisoForm.reset();
   }
 
@@ -247,7 +340,7 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
     this.avisoForm.setValue({
       avisoName: aviso.name,
       avisoDescription: aviso.description,
-      avisoPercentage: Math.round(aviso.percentage * 100) // Convertir a 1-100 para UI
+      avisoPercentage: Math.round(aviso.percentage * 100)
     });
   }
 
@@ -275,7 +368,12 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
       name: '',
       description: '',
       categoryId: '',
-      typeId: ''
+      typeId: '',
+      periodicityId: '',
+      amount: null,
+      unitId: '',
+      startDate: '',
+      endDate: ''
     });
     this.avisoForm.reset();
     this.isModalOpen = true;
@@ -289,7 +387,12 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
       name: obj.name,
       description: obj.description,
       categoryId: obj.categoryId,
-      typeId: obj.typeId
+      typeId: obj.typeId,
+      periodicityId: obj.periodicityId,
+      amount: obj.amount,
+      unitId: obj.unitId,
+      startDate: this.formatDateForInput(obj.startDate),
+      endDate: this.formatDateForInput(obj.endDate)
     });
     this.avisoForm.reset();
     this.isModalOpen = true;
@@ -306,14 +409,29 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
   // --- Guardar Objetivo ---
 
   async saveObjetivo() {
-    if (this.objetivoForm.invalid) return;
+    if (this.objetivoForm.invalid || this.isDateRangeInvalid()) return;
 
     const formVal = this.objetivoForm.value;
-    const objetivoData = {
+    const periodicity = this.getPeriodicity(formVal.periodicityId);
+    
+    // Preparar fechas según periodicidad
+    let startDate: Date | null = null;
+    let endDate: Date | null = null;
+    if (periodicity?.code === 'PER-OBJ-0003') {
+      startDate = new Date(formVal.startDate + 'T00:00:00');
+      endDate = new Date(formVal.endDate + 'T00:00:00');
+    }
+
+    const objetivoData: Omit<Objetivo, 'id' | 'active'> = {
       name: formVal.name.trim(),
       description: formVal.description.trim(),
       categoryId: formVal.categoryId,
       typeId: formVal.typeId,
+      periodicityId: formVal.periodicityId,
+      amount: Number(formVal.amount),
+      unitId: formVal.unitId,
+      ...(startDate && { startDate }),
+      ...(endDate && { endDate }),
       alerts: this.tempAlerts
     };
 
@@ -332,7 +450,7 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
   // --- Confirmar Eliminación ---
 
   async confirmDelete(event: Event, obj: Objetivo) {
-    event.stopPropagation(); // Evitar abrir modal de edición
+    event.stopPropagation();
     if (!obj.id) return;
 
     const alert = await this.alertController.create({
