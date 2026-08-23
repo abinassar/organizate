@@ -31,7 +31,16 @@
           <h3>{{ obj.name }}</h3>
           <p class="objetivo-description">{{ obj.description }}</p>
           
-          <div class="objetivo-details ion-margin-top">
+          <!-- Barra de Progreso Acumulado -->
+          <div class="list-progress-bar-wrapper ion-margin-top">
+            <ion-progress-bar [value]="getGoalPercentage(obj)" [color]="getGoalPercentage(obj) >= 1 ? 'success' : 'primary'"></ion-progress-bar>
+            <div class="progress-labels">
+              <span class="progress-amounts">{{ getGoalProgress(obj) | number:'1.2-2' }} / {{ obj.amount | number:'1.2-2' }} {{ getUnit(obj.unitId)?.name || '' }}</span>
+              <span class="progress-pct">{{ getGoalPercentageLabel(obj) }}</span>
+            </div>
+          </div>
+          
+          <div class="objetivo-details">
             <!-- Badge de Monto y Moneda -->
             <ion-badge color="primary" class="detail-badge amount-badge">
               <ion-icon name="cash-outline"></ion-icon>

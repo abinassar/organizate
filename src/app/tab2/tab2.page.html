@@ -142,8 +142,20 @@
               {{ order.advertisementRole === 'MAKER' ? 'Anunciante' : 'Taker' }}
             </div>
           </div>
+
+          <!-- Botón de Opciones (Gestionar objetivos) -->
+          <ion-button slot="end" fill="clear" color="medium" (click)="abrirMenuOperacion($event, order)" class="option-menu-btn">
+            <ion-icon slot="icon-only" name="ellipsis-vertical-outline"></ion-icon>
+          </ion-button>
         </ion-item>
       </ion-list>
     </div>
   </div>
+
+  <!-- Modal para gestionar transacciones asociadas a la operación -->
+  <ion-modal [isOpen]="isTransaccionesModalOpen" (didDismiss)="cerrarGestionarModal()">
+    <ng-template>
+      <app-transacciones [operation]="selectedOrder" (close)="cerrarGestionarModal()"></app-transacciones>
+    </ng-template>
+  </ion-modal>
 </ion-content>

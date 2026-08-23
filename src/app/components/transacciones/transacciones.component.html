@@ -1,0 +1,190 @@
+<ion-header>
+  <ion-toolbar color="primary" class="main-toolbar">
+    <ion-buttons slot="start">
+      <ion-button (click)="cerrarModal()">
+        <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>{{ operation ? 'Transacciones de la operación' : 'Nueva transacción' }}</ion-title>
+    <ion-spinner slot="end" name="crescent" *ngIf="isLoading || isSaving" class="header-spinner"></ion-spinner>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding modal-content">
+  <!-- Spinner de Carga Inicial -->
+  <div class="loading-container ion-padding ion-text-center" *ngIf="isLoading">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Cargando datos...</p>
+  </div>
+
+  <div *ngIf="!isLoading">
+    <!-- DETALLES DE LA OPERACIÓN P2P (Solo en modo Operación) -->
+    <div class="operation-details-card ion-margin-bottom" *ngIf="operation">
+      <div class="card-glow"></div>
+      <div class="details-header">
+        <span class="order-type-badge" [ngClass]="operation.tradeType.toLowerCase()">
+          <ion-icon [name]="operation.tradeType === 'BUY' ? 'arrow-down-outline' : 'arrow-up-outline'"></ion-icon>
+          {{ operation.tradeType === 'BUY' ? 'Compra' : 'Venta' }}
+        </span>
+        <span class="order-id">Nº {{ operation.orderNumber }}</span>
+      </div>
+
+      <div class="details-body">
+        <div class="detail-row">
+          <span class="label">Contraparte</span>
+          <span class="value">{{ operation.counterPartNickName || 'Usuario Binance' }}</span>
+        </div>
+        <div class="detail-row">
+          <span class="label">Fecha</span>
+          <span class="value">{{ operation.createTime | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+
+        <div class="amounts-summary">
+          <div class="amount-block fiat">
+            <span class="block-label">Monto Fiat</span>
+            <span class="block-value">{{ operation.totalPrice | number:'1.2-2' }} {{ operation.fiatSymbol ||
+              operation.fiat }}</span>
+          </div>
+          <div class="amount-block crypto">
+            <span class="block-label">Monto Cripto</span>
+            <span class="block-value">{{ operation.amount | number:'1.2-8' }} {{ operation.asset }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LISTADO DE ASOCIACIONES EXISTENTES (Solo en modo Operación) -->
+    <div class="associated-section ion-margin-bottom" *ngIf="operation && transaccionesAsociadas.length > 0">
+      <div class="section-title">
+        <ion-icon name="information-circle-outline"></ion-icon>
+        <h4>Asociaciones Activas ({{ transaccionesAsociadas.length }})</h4>
+      </div>
+
+      <ion-list class="premium-list" lines="none">
+        <ion-item *ngFor="let tx of transaccionesAsociadas" class="associated-item">
+          <ion-label>
+            <span class="goal-tag">{{ getObjetivoName(tx.objetivoId) }}</span>
+            <h3>{{ tx.description }}</h3>
+            <p class="tx-date">{{ tx.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
+          </ion-label>
+          <div slot="end" class="right-action-wrapper">
+            <span class="amount-tag text-success">
+              {{ tx.amount | number:'1.2-8' }} {{ tx.currency }}
+            </span>
+            <ion-button color="danger" fill="clear" (click)="confirmDelete(tx)">
+              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+            </ion-button>
+          </div>
+        </ion-item>
+      </ion-list>
+    </div>
+
+    <div class="empty-associated ion-padding ion-text-center ion-margin-bottom"
+      *ngIf="operation && transaccionesAsociadas.length === 0">
+      <p>Esta operación aún no está asociada a ningún objetivo financiero.</p>
+    </div>
+
+    <!-- FORMULARIO DE REGISTRO / ASOCIACIÓN -->
+    <div class="form-card">
+      <div class="form-header">
+        <ion-icon name="wallet-outline"></ion-icon>
+        <h4>{{ operation ? 'Asociar a un Objetivo' : 'Detalles de la Transacción' }}</h4>
+      </div>
+
+      <form [formGroup]="transaccionForm" (ngSubmit)="saveTransaccion()">
+        <!-- Selector de Objetivo Financiero -->
+        <div class="form-field-container ion-margin-bottom">
+          <ion-item fill="outline" class="form-item">
+            <ion-label position="floating">Objetivo Financiero</ion-label>
+            <ion-select formControlName="objetivoId" placeholder="Selecciona un objetivo" okText="Seleccionar"
+              cancelText="Cancelar">
+              <ion-select-option *ngFor="let obj of objetivos" [value]="obj.id">
+                {{ obj.name }} ({{ obj.amount | number:'1.2-2' }} {{ getObjetivoCurrency(obj.id!) }})
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+          <ion-note *ngIf="transaccionForm.get('objetivoId')?.invalid && transaccionForm.get('objetivoId')?.touched"
+            color="danger" class="form-error-note">
+            Debe seleccionar un objetivo financiero.
+          </ion-note>
+        </div>
+
+        <!-- Sugerencias de Monto (Solo en modo Operación) -->
+        <div class="amount-suggestions-wrapper ion-margin-bottom" *ngIf="operation">
+          <span class="suggestions-title">Copiar monto de la operación:</span>
+          <div class="chips-container">
+            <ion-chip class="suggested-chip fiat" (click)="copiarMonto(operation.totalPrice)">
+              <ion-icon name="cash-outline"></ion-icon>
+              <ion-label>{{ operation.totalPrice }} (Fiat)</ion-label>
+            </ion-chip>
+            <ion-chip class="suggested-chip crypto" (click)="copiarMonto(operation.amount)">
+              <ion-icon name="cash-outline"></ion-icon>
+              <ion-label>{{ operation.amount }} (Cripto)</ion-label>
+            </ion-chip>
+          </div>
+        </div>
+
+        <!-- Grupo de Monto y Moneda -->
+        <div class="form-row ion-margin-bottom">
+          <!-- Monto -->
+          <div class="form-field-container" [ngClass]="operation ? 'form-col-12' : 'form-col-8'">
+            <ion-item fill="outline" class="form-item">
+              <ion-label position="floating">Monto</ion-label>
+              <ion-input type="number" formControlName="amount" placeholder="Ej. 150.50"></ion-input>
+            </ion-item>
+            <ion-note *ngIf="transaccionForm.get('amount')?.invalid && transaccionForm.get('amount')?.touched"
+              color="danger" class="form-error-note">
+              <span *ngIf="transaccionForm.get('amount')?.errors?.['required']">El monto es requerido.</span>
+              <span *ngIf="transaccionForm.get('amount')?.errors?.['min']">Debe ser mayor a 0.</span>
+            </ion-note>
+          </div>
+
+          <!-- Moneda (Solo visible en modo manual) -->
+          <div class="form-field-container form-col-4" *ngIf="!operation">
+            <ion-item fill="outline" class="form-item">
+              <ion-label position="floating">Moneda</ion-label>
+              <ion-select formControlName="currency" placeholder="Moneda" okText="Seleccionar" cancelText="Cancelar">
+                <ion-select-option value="USDT">USDT</ion-select-option>
+                <ion-select-option value="EUR">EUR</ion-select-option>
+                <ion-select-option value="BS">BS</ion-select-option>
+              </ion-select>
+            </ion-item>
+          </div>
+        </div>
+
+        <!-- Indicador dinámico de moneda esperada -->
+        <div class="currency-hint ion-padding-start ion-padding-end ion-margin-bottom"
+          *ngIf="transaccionForm.get('objetivoId')?.value">
+          <p class="hint-text">
+            <ion-icon name="information-circle-outline"></ion-icon>
+            Moneda del objetivo seleccionado: <strong>{{ getObjetivoCurrency(transaccionForm.get('objetivoId')?.value)
+              }}</strong>
+          </p>
+        </div>
+
+        <!-- Descripción -->
+        <div class="form-field-container ion-margin-bottom">
+          <ion-item fill="outline" class="form-item">
+            <ion-label position="floating">Descripción</ion-label>
+            <ion-textarea formControlName="description" rows="3"
+              placeholder="Ej. Pago parcial de cuota, abono P2P..."></ion-textarea>
+          </ion-item>
+          <ion-note *ngIf="transaccionForm.get('description')?.invalid && transaccionForm.get('description')?.touched"
+            color="danger" class="form-error-note">
+            <span *ngIf="transaccionForm.get('description')?.errors?.['required']">La descripción es requerida.</span>
+            <span *ngIf="transaccionForm.get('description')?.errors?.['maxlength']">Máximo 150 caracteres.</span>
+          </ion-note>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="action-buttons-container">
+          <ion-button expand="block" type="submit" [disabled]="isSaving" class="submit-btn">
+            <ion-icon slot="start" name="add-outline" *ngIf="!isSaving"></ion-icon>
+            <ion-spinner name="crescent" slot="start" *ngIf="isSaving"></ion-spinner>
+            {{ operation ? 'Asociar Transacción' : 'Registrar Transacción' }}
+          </ion-button>
+        </div>
+      </form>
+    </div>
+  </div>
+</ion-content>

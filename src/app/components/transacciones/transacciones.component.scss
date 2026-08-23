@@ -1,0 +1,385 @@
+.main-toolbar {
+  --background: var(--ion-color-primary, #3b82f6);
+  --color: #ffffff;
+  --border-color: transparent;
+  padding: 4px 8px;
+}
+
+.header-spinner {
+  margin-right: 16px;
+  width: 20px;
+  height: 20px;
+}
+
+.modal-content {
+  --background: var(--ion-background-color, #1e2026);
+  height: 35rem;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--ion-color-step-600, #666);
+}
+
+/* Tarjeta de detalles de operación */
+.operation-details-card {
+  position: relative;
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(var(--ion-color-primary-rgb, 59, 130, 246), 0.05);
+  border: 1px solid rgba(var(--ion-color-primary-rgb, 59, 130, 246), 0.15);
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+
+  .card-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(var(--ion-color-primary-rgb, 59, 130, 246), 0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    border-bottom: 1px dashed rgba(var(--ion-color-primary-rgb, 59, 130, 246), 0.2);
+    padding-bottom: 8px;
+
+    .order-type-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 8px;
+      text-transform: uppercase;
+
+      &.buy {
+        background: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+      }
+
+      &.sell {
+        background: rgba(239, 68, 68, 0.15);
+        color: #ef4444;
+      }
+    }
+
+    .order-id {
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: var(--ion-color-step-600, #666);
+    }
+  }
+
+  .details-body {
+    position: relative;
+    z-index: 1;
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 0.88rem;
+
+      .label {
+        color: var(--ion-color-step-500, #777);
+      }
+
+      .value {
+        font-weight: 600;
+        color: var(--ion-text-color, #1a1a1a);
+      }
+    }
+
+    .amounts-summary {
+      display: flex;
+      gap: 12px;
+      margin-top: 14px;
+
+      .amount-block {
+        flex: 1;
+        padding: 10px;
+        border-radius: 10px;
+        background: rgba(var(--ion-color-light-rgb, 244, 245, 248), 0.7);
+        border: 1px solid rgba(var(--ion-text-color-rgb, 0, 0, 0), 0.04);
+        display: flex;
+        flex-direction: column;
+
+        .block-label {
+          font-size: 0.7rem;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
+          color: var(--ion-color-step-500, #777);
+          margin-bottom: 2px;
+        }
+
+        .block-value {
+          font-size: 1rem;
+          font-weight: 800;
+          color: var(--ion-text-color, #1a1a1a);
+        }
+      }
+    }
+  }
+}
+
+/* Sección de asociaciones activas */
+.associated-section {
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    color: var(--ion-color-step-700, #444);
+
+    ion-icon {
+      font-size: 1.1rem;
+    }
+
+    h4 {
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+  }
+}
+
+.premium-list {
+  background: transparent;
+  padding: 0;
+}
+
+.associated-item {
+  --background: var(--ion-card-background, #fff);
+  --padding-start: 12px;
+  --padding-end: 12px;
+  --inner-padding-end: 0;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(var(--ion-text-color-rgb, 0, 0, 0), 0.03);
+
+  .goal-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--ion-color-primary, #3b82f6);
+    background: rgba(var(--ion-color-primary-rgb, 59, 130, 246), 0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+  }
+
+  h3 {
+    margin: 0 0 2px 0;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--ion-text-color, #1a1a1a);
+  }
+
+  .tx-date {
+    margin: 0;
+    font-size: 0.72rem;
+    color: var(--ion-color-step-400, #999);
+  }
+
+  .right-action-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .amount-tag {
+      font-weight: 700;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+  }
+}
+
+.empty-associated {
+  background: rgba(var(--ion-color-light-rgb, 244, 245, 248), 0.4);
+  border: 1px dashed rgba(var(--ion-text-color-rgb, 0, 0, 0), 0.08);
+  border-radius: 12px;
+  color: var(--ion-color-step-500, #777);
+  font-size: 0.85rem;
+
+  p {
+    margin: 0;
+  }
+}
+
+/* Tarjeta del Formulario */
+.form-card {
+  background: var(--ion-card-background, #fff);
+  border-radius: 16px;
+  padding: 18px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(var(--ion-text-color-rgb, 0, 0, 0), 0.04);
+
+  .form-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    color: var(--ion-color-primary, #3b82f6);
+
+    ion-icon {
+      font-size: 1.25rem;
+    }
+
+    h4 {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+  }
+}
+
+/* Sugerencias de monto */
+.amount-suggestions-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  .suggestions-title {
+    font-size: 0.75rem;
+    color: var(--ion-color-step-500, #777);
+    font-weight: 500;
+  }
+
+  .chips-container {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    .suggested-chip {
+      --background: rgba(var(--ion-color-primary-rgb, 59, 130, 246), 0.06);
+      --color: var(--ion-color-primary, #3b82f6);
+      border: 1px solid rgba(var(--ion-color-primary-rgb, 59, 130, 246), 0.15);
+      margin: 0;
+      font-weight: 600;
+      font-size: 0.8rem;
+      transition: background 0.2s, transform 0.1s;
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      &.fiat {
+        --background: rgba(var(--ion-color-secondary-rgb, 59, 130, 246), 0.06);
+        --color: var(--ion-color-secondary, #3b82f6);
+        border-color: rgba(var(--ion-color-secondary-rgb, 59, 130, 246), 0.15);
+      }
+    }
+  }
+}
+
+/* Campos de Formulario */
+.form-field-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-item {
+  --background: rgba(var(--ion-color-light-rgb, 244, 245, 248), 0.5);
+  --border-radius: 12px;
+  --padding-start: 12px;
+  margin-bottom: 4px;
+}
+
+.form-error-note {
+  font-size: 0.75rem;
+  margin-top: 2px;
+  padding-left: 4px;
+}
+
+.form-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.form-col-12 {
+  flex: 0 0 100%;
+}
+
+.form-col-8 {
+  flex: 0 0 calc(66.66% - 6px);
+}
+
+.form-col-4 {
+  flex: 0 0 calc(33.33% - 6px);
+}
+
+.currency-hint {
+  .hint-text {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 8px 0;
+    font-size: 0.8rem;
+    color: var(--ion-color-step-600, #666);
+
+    ion-icon {
+      font-size: 0.95rem;
+      color: var(--ion-color-primary, #3b82f6);
+    }
+  }
+}
+
+/* Botones de acción */
+.action-buttons-container {
+  margin-top: 20px;
+
+  .submit-btn {
+    --border-radius: 12px;
+    font-weight: 700;
+    --background: var(--ion-color-primary, #3b82f6);
+    height: 48px;
+    box-shadow: 0 4px 16px rgba(var(--ion-color-primary-rgb, 59, 130, 246), 0.25);
+  }
+}
+
+/* Modo oscuro específico */
+@media (prefers-color-scheme: dark) {
+  .associated-item {
+    --background: #2b303c;
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .form-card {
+    background: #2b303c;
+    border-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .operation-details-card {
+    background: rgba(var(--ion-color-primary-rgb, 59, 130, 246), 0.1);
+
+    .details-body {
+      .amounts-summary {
+        .amount-block {
+          background: #1e2026;
+          border-color: rgba(255, 255, 255, 0.05);
+        }
+      }
+    }
+  }
+
+  .empty-associated {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.08);
+  }
+}

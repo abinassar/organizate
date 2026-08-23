@@ -95,6 +95,37 @@
   margin-right: 16px;
 }
 
+.list-progress-bar-wrapper {
+  margin-top: 8px;
+  margin-bottom: 8px;
+  width: 100%;
+
+  ion-progress-bar {
+    height: 6px;
+    border-radius: 3px;
+    --background: rgba(var(--ion-color-primary-rgb, 59, 130, 246), 0.08);
+  }
+
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--ion-color-medium, #888);
+    margin-top: 4px;
+    font-weight: 500;
+
+    .progress-amounts {
+      font-weight: 700;
+      color: var(--ion-color-dark, #333);
+    }
+    
+    .progress-pct {
+      font-weight: 750;
+      color: var(--ion-color-primary, #3b82f6);
+    }
+  }
+}
+
 .objetivo-details {
   display: flex;
   gap: 6px;

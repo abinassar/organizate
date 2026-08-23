@@ -1,17 +1,193 @@
 <ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Tab 1
-    </ion-title>
+  <ion-toolbar class="main-toolbar">
+    <ion-title>Dashboard Resumen</ion-title>
+    <ion-spinner slot="end" name="crescent" *ngIf="isLoading" class="header-spinner"></ion-spinner>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" class="ion-padding-bottom">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">Tab 1</ion-title>
+      <ion-title size="large">Resumen</ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <app-explore-container name="Tab 1 page"></app-explore-container>
+  <!-- Spinner de Carga -->
+  <div class="loader-wrapper ion-padding ion-text-center" *ngIf="isLoading">
+    <ion-spinner name="crescent" class="main-spinner"></ion-spinner>
+    <p>Cargando información financiera...</p>
+  </div>
+
+  <div *ngIf="!isLoading">
+    <!-- BOTÓN NUEVA TRANSACCIÓN -->
+    <div class="action-header-container ion-padding">
+      <ion-button expand="block" (click)="abrirNuevaTransaccionModal()" class="new-tx-btn">
+        <ion-icon slot="start" name="add-outline"></ion-icon>
+        Nueva Transacción
+      </ion-button>
+    </div>
+
+    <!-- TARJETAS DE BALANCE -->
+    <div class="balances-container ion-padding-horizontal">
+      <ion-grid class="ion-no-padding">
+        <ion-row class="balances-row">
+          <!-- USDT -->
+          <ion-col size="4" class="balance-col">
+            <div class="balance-card usdt-theme">
+              <div class="card-glass"></div>
+              <div class="card-icon">
+                <ion-icon name="wallet-outline"></ion-icon>
+              </div>
+              <span class="currency">USDT</span>
+              <span class="value">{{ balances['USDT'] | number:'1.2-2' }}</span>
+            </div>
+          </ion-col>
+
+          <!-- EUR -->
+          <ion-col size="4" class="balance-col">
+            <div class="balance-card eur-theme">
+              <div class="card-glass"></div>
+              <div class="card-icon">
+                <ion-icon name="cash-outline"></ion-icon>
+              </div>
+              <span class="currency">EUR</span>
+              <span class="value">{{ balances['EUR'] | number:'1.2-2' }}</span>
+            </div>
+          </ion-col>
+
+          <!-- BS -->
+          <ion-col size="4" class="balance-col">
+            <div class="balance-card bs-theme">
+              <div class="card-glass"></div>
+              <div class="card-icon">
+                <ion-icon name="trending-up-outline"></ion-icon>
+              </div>
+              <span class="currency">BS</span>
+              <span class="value">{{ balances['BS'] | number:'1.2-2' }}</span>
+            </div>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </div>
+
+    <!-- OBJETIVOS FINANCIEROS Y SU PROGRESO -->
+    <div class="section-container ion-padding">
+      <div class="section-header">
+        <ion-icon name="trophy-outline" color="primary"></ion-icon>
+        <h2>Mis Objetivos Financieros</h2>
+      </div>
+
+      <!-- Estado vacío si no hay objetivos -->
+      <div class="empty-section-state ion-padding ion-text-center" *ngIf="objetivos.length === 0">
+        <ion-icon name="trophy-outline"></ion-icon>
+        <p>No tienes objetivos financieros creados todavía.</p>
+        <p class="sub-text">Créalos en la pestaña de Configuración.</p>
+      </div>
+
+      <div class="goals-grid" *ngIf="objetivos.length > 0">
+        <ion-card class="goal-progress-card" *ngFor="let goal of objetivos">
+          <div class="goal-glow"></div>
+          <ion-card-header>
+            <div class="goal-header-top">
+              <ion-card-subtitle class="category-subtitle">
+                {{ goal.categoryName || 'General' }}
+              </ion-card-subtitle>
+              <!-- Porcentaje -->
+              <ion-badge [color]="getGoalPercentage(goal) >= 1 ? 'success' : 'primary'" class="pct-badge">
+                {{ getGoalPercentageLabel(goal) }}
+              </ion-badge>
+            </div>
+            <ion-card-title>{{ goal.name }}</ion-card-title>
+          </ion-card-header>
+
+          <ion-card-content>
+            <p class="goal-desc">{{ goal.description }}</p>
+
+            <!-- Barra de Progreso -->
+            <div class="progress-bar-wrapper">
+              <ion-progress-bar 
+                [value]="getGoalPercentage(goal)" 
+                [color]="getGoalPercentage(goal) >= 1 ? 'success' : 'primary'"
+                class="premium-progress">
+              </ion-progress-bar>
+            </div>
+
+            <!-- Valores -->
+            <div class="goal-progress-amounts">
+              <span class="current">
+                {{ getGoalProgress(goal) | number:'1.2-2' }} {{ getUnitName(goal.unitId) }}
+              </span>
+              <span class="target">
+                de {{ goal.amount | number:'1.2-2' }} {{ getUnitName(goal.unitId) }}
+              </span>
+            </div>
+
+            <!-- ALERTAS O AVISOS ACTIVADOS -->
+            <div class="triggered-alerts-container ion-margin-top" *ngIf="getTriggeredAlerts(goal).length > 0">
+              <div class="alert-item" *ngFor="let alert of getTriggeredAlerts(goal)">
+                <ion-icon name="alert-circle-outline" color="warning"></ion-icon>
+                <div class="alert-content">
+                  <span class="alert-title">{{ alert.name }} ({{ alert.percentage * 100 }}%)</span>
+                  <span class="alert-desc">{{ alert.description }}</span>
+                </div>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </div>
+
+    <!-- RECIENTES TRANSACCIONES -->
+    <div class="section-container ion-padding-horizontal">
+      <div class="section-header">
+        <ion-icon name="time-outline" color="primary"></ion-icon>
+        <h2>Transacciones Recientes</h2>
+      </div>
+
+      <!-- Estado vacío si no hay transacciones -->
+      <div class="empty-section-state ion-padding ion-text-center" *ngIf="transacciones.length === 0">
+        <ion-icon name="time-outline"></ion-icon>
+        <p>No hay transacciones registradas aún.</p>
+        <p class="sub-text">Asocia operaciones P2P o crea transacciones manuales.</p>
+      </div>
+
+      <ion-list class="premium-list" lines="none" *ngIf="transacciones.length > 0">
+        <ion-item *ngFor="let tx of recentTransacciones" class="tx-list-item">
+          <!-- Icono indicador de tipo (asociado a P2P o manual) -->
+          <div slot="start" class="tx-icon-wrapper" [ngClass]="tx.operationId ? 'p2p-tx' : 'manual-tx'">
+            <ion-icon [name]="tx.operationId ? 'cash-outline' : 'wallet-outline'"></ion-icon>
+          </div>
+
+          <ion-label>
+            <span class="goal-association-name">
+              Objetivo: {{ getObjetivoName(tx.objetivoId) }}
+            </span>
+            <h3>{{ tx.description }}</h3>
+            <div class="tx-sub-info">
+              <span class="tx-date">{{ tx.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span class="tx-type-tag" *ngIf="tx.operationId">P2P</span>
+              <span class="tx-type-tag manual" *ngIf="!tx.operationId">Manual</span>
+            </div>
+          </ion-label>
+
+          <div slot="end" class="tx-end-wrapper">
+            <span class="tx-amount font-bold">
+              +{{ tx.amount | number:'1.2-8' }} {{ tx.currency }}
+            </span>
+            <!-- Botón para eliminar transacción manual -->
+            <ion-button color="danger" fill="clear" (click)="confirmDeleteTransaccion($event, tx)" class="delete-tx-btn">
+              <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+            </ion-button>
+          </div>
+        </ion-item>
+      </ion-list>
+    </div>
+  </div>
+
+  <!-- MODAL DE NUEVA TRANSACCIÓN MANUAL -->
+  <ion-modal [isOpen]="isTransaccionesModalOpen" (didDismiss)="cerrarNuevaTransaccionModal()">
+    <ng-template>
+      <app-transacciones (close)="cerrarNuevaTransaccionModal()"></app-transacciones>
+    </ng-template>
+  </ion-modal>
 </ion-content>

@@ -53,6 +53,9 @@ import { TipoObjetivo } from '../../models/tipo-objetivo.model';
 import { Periodicity } from '../../models/periodicity.model';
 import { AmountUnit } from '../../models/amount-unit.model';
 import { Objetivo, Aviso } from '../../models/objetivo.model';
+import { Transaccion } from '../../models/transaccion.model';
+import { TransaccionService } from '../../services/transaccion.service';
+import { IonProgressBar } from '@ionic/angular/standalone';
 
 @Component({
   selector: 'app-objetivos',
@@ -81,7 +84,8 @@ import { Objetivo, Aviso } from '../../models/objetivo.model';
     IonTextarea,
     IonNote,
     IonSelect,
-    IonSelectOption
+    IonSelectOption,
+    IonProgressBar
   ]
 })
 export class ObjetivosComponent implements OnInit, OnDestroy {
@@ -90,6 +94,7 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
   tiposObjetivos: TipoObjetivo[] = [];
   periodicidades: Periodicity[] = [];
   unidadesMonto: AmountUnit[] = [];
+  transacciones: Transaccion[] = [];
   
   isLoading = true;
   isModalOpen = false;
@@ -109,6 +114,7 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
   private periodicityService = inject(PeriodicityService);
   private amountUnitService = inject(AmountUnitService);
   private objetivoService = inject(ObjetivoService);
+  private transaccionService = inject(TransaccionService);
   private alertController = inject(AlertController);
 
   constructor() {
@@ -183,6 +189,16 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
         error: (err) => console.error('Error al cargar objetivos:', err)
       })
     );
+
+    this.subscriptions.add(
+      this.transaccionService.getTransacciones().subscribe({
+        next: (txs) => {
+          this.transacciones = txs;
+          this.checkLoadingState();
+        },
+        error: (err) => console.error('Error al cargar transacciones:', err)
+      })
+    );
   }
 
   ngOnDestroy() {
@@ -195,12 +211,32 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
       this.tiposObjetivos !== undefined && 
       this.periodicidades !== undefined && 
       this.unidadesMonto !== undefined && 
-      this.objetivos !== undefined
+      this.objetivos !== undefined &&
+      this.transacciones !== undefined
     ) {
       setTimeout(() => {
         this.isLoading = false;
       }, 300);
     }
+  }
+
+  // --- Progreso de Objetivos ---
+
+  getGoalProgress(goal: Objetivo): number {
+    if (!goal.id) return 0;
+    return this.transacciones
+      .filter(tx => tx.objetivoId === goal.id)
+      .reduce((sum, tx) => sum + tx.amount, 0);
+  }
+
+  getGoalPercentage(goal: Objetivo): number {
+    if (goal.amount <= 0) return 0;
+    return this.getGoalProgress(goal) / goal.amount;
+  }
+
+  getGoalPercentageLabel(goal: Objetivo): string {
+    const pct = this.getGoalPercentage(goal) * 100;
+    return `${Math.round(pct)}%`;
   }
 
   private initForms() {

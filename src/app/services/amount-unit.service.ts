@@ -68,6 +68,24 @@ export class AmountUnitService {
             } catch (e) {
               console.error('Error al inicializar unidades de monto:', e);
             }
+          } else {
+            // Verificar si falta la unidad de Bolívares (BS)
+            const hasBs = units.some(u => u.name.toUpperCase() === 'BS');
+            if (!hasBs) {
+              try {
+                const ref = collection(this.db, this.collectionName);
+                await addDoc(ref, {
+                  name: 'BS',
+                  code: 'UNI-MON-0004',
+                  active: true,
+                  createdAt: new Date(),
+                  updatedAt: new Date()
+                });
+                console.log('Unidad de monto BS autosembrada con éxito.');
+              } catch (e) {
+                console.error('Error al sembrar la unidad BS:', e);
+              }
+            }
           }
           
           // Ordenar por código (USD, USDT, EUR)
@@ -104,6 +122,13 @@ export class AmountUnitService {
       {
         name: 'EUR',
         code: 'UNI-MON-0003',
+        active: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        name: 'BS',
+        code: 'UNI-MON-0004',
         active: true,
         createdAt: new Date(),
         updatedAt: new Date()

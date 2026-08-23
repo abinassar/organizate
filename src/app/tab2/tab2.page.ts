@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { 
@@ -21,7 +21,9 @@ import {
   IonCard,
   IonCardContent,
   IonButton,
-  IonText
+  IonText,
+  IonModal,
+  ActionSheetController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { 
@@ -32,9 +34,11 @@ import {
   refreshOutline, 
   checkmarkCircleOutline, 
   closeCircleOutline,
-  informationCircleOutline
+  informationCircleOutline,
+  ellipsisVerticalOutline
 } from 'ionicons/icons';
 import { BinanceService } from '../services/binance.service';
+import { TransaccionesComponent } from '../components/transacciones/transacciones.component';
 
 @Component({
   selector: 'app-tab2',
@@ -63,7 +67,9 @@ import { BinanceService } from '../services/binance.service';
     IonCard,
     IonCardContent,
     IonButton,
-    IonText
+    IonText,
+    IonModal,
+    TransaccionesComponent
   ]
 })
 export class Tab2Page implements OnInit {
@@ -75,6 +81,12 @@ export class Tab2Page implements OnInit {
   selectedSegment: string = 'all';
   binanceConfigured: boolean = false;
 
+  // Propiedades para modal de transacciones
+  isTransaccionesModalOpen: boolean = false;
+  selectedOrder: any = null;
+
+  private actionSheetController = inject(ActionSheetController);
+
   constructor(private binanceService: BinanceService) {
     addIcons({
       arrowDownOutline,
@@ -84,7 +96,8 @@ export class Tab2Page implements OnInit {
       refreshOutline,
       checkmarkCircleOutline,
       closeCircleOutline,
-      informationCircleOutline
+      informationCircleOutline,
+      ellipsisVerticalOutline
     });
   }
 
@@ -205,5 +218,39 @@ export class Tab2Page implements OnInit {
       default:
         return status;
     }
+  }
+
+  async abrirMenuOperacion(event: Event, order: any) {
+    event.stopPropagation();
+    
+    const actionSheet = await this.actionSheetController.create({
+      header: `Operación Nº ${order.orderNumber.substring(0, 10)}...`,
+      buttons: [
+        {
+          text: 'Gestionar objetivos',
+          icon: 'wallet-outline',
+          handler: () => {
+            this.abrirGestionarModal(order);
+          }
+        },
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+          icon: 'close-outline'
+        }
+      ]
+    });
+
+    await actionSheet.present();
+  }
+
+  abrirGestionarModal(order: any) {
+    this.selectedOrder = order;
+    this.isTransaccionesModalOpen = true;
+  }
+
+  cerrarGestionarModal() {
+    this.selectedOrder = null;
+    this.isTransaccionesModalOpen = false;
   }
 }
