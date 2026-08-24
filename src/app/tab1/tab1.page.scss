@@ -452,8 +452,125 @@
     border-color: rgba(255, 255, 255, 0.05);
   }
 
+  .scheme-progress-card {
+    background: #2b303c;
+    border-color: rgba(255, 255, 255, 0.05);
+
+    .scheme-totals-container {
+      background: #21242d !important;
+      border-color: rgba(255, 255, 255, 0.05) !important;
+    }
+
+    .scheme-breakdown-item {
+      background: rgba(255, 255, 255, 0.03) !important;
+      
+      .objective-progress {
+        color: #f5f5f5 !important;
+      }
+    }
+  }
+
   .empty-section-state {
     background: rgba(255, 255, 255, 0.02);
     border-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* Esquemas Financieros en Tab 1 */
+.scheme-progress-card {
+  .scheme-glow {
+    position: absolute;
+    top: -40%;
+    right: -20%;
+    width: 60%;
+    height: 120%;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .scheme-totals-container {
+    margin-top: 12px;
+    margin-bottom: 16px;
+    padding: 12px;
+    border-radius: 12px;
+    background: var(--ion-color-light, #f4f5f8);
+    border: 1px solid rgba(var(--ion-text-color-rgb, 0,0,0), 0.03);
+
+    .scheme-total-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .total-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--ion-color-step-600, #666);
+      }
+
+      .total-value {
+        font-size: 1.15rem;
+        font-weight: 800;
+        
+        &.text-success {
+          color: var(--ion-color-success, #2dd36f);
+        }
+        
+        &.text-danger {
+          color: var(--ion-color-danger, #eb445a);
+        }
+      }
+    }
+  }
+
+  .scheme-breakdown-title {
+    font-size: 0.72rem;
+    font-weight: 750;
+    text-transform: uppercase;
+    color: var(--ion-color-step-500, #888);
+    letter-spacing: 0.3px;
+    margin-bottom: 8px;
+  }
+
+  .scheme-breakdown-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .scheme-breakdown-item {
+    display: flex;
+    align-items: center;
+    background: rgba(var(--ion-text-color-rgb, 0,0,0), 0.02);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    gap: 8px;
+
+    ion-icon {
+      font-size: 1.1rem;
+    }
+
+    .operator-symbol {
+      font-weight: 800;
+      font-size: 0.85rem;
+
+      &.sum {
+        color: var(--ion-color-success, #2dd36f);
+      }
+
+      &.subtract {
+        color: var(--ion-color-danger, #eb445a);
+      }
+    }
+
+    .objective-name {
+      font-weight: 600;
+      flex-grow: 1;
+    }
+
+    .objective-progress {
+      font-weight: 750;
+      color: var(--ion-color-step-800, #333);
+    }
   }
 }

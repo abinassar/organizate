@@ -137,6 +137,69 @@
       </div>
     </div>
 
+    <!-- ESQUEMAS FINANCIEROS Y SU PROGRESO -->
+    <div class="section-container ion-padding">
+      <div class="section-header">
+        <ion-icon name="swap-horizontal" color="primary"></ion-icon>
+        <h2>Mis Esquemas Financieros</h2>
+      </div>
+
+      <!-- Estado vacío si no hay esquemas -->
+      <div class="empty-section-state ion-padding ion-text-center" *ngIf="esquemasFinancieros.length === 0">
+        <ion-icon name="swap-horizontal"></ion-icon>
+        <p>No tienes esquemas financieros creados todavía.</p>
+        <p class="sub-text">Créalos en la pestaña de Configuración.</p>
+      </div>
+
+      <div class="goals-grid" *ngIf="esquemasFinancieros.length > 0">
+        <ion-card class="goal-progress-card scheme-progress-card" *ngFor="let scheme of esquemasFinancieros">
+          <div class="goal-glow scheme-glow"></div>
+          <ion-card-header>
+            <div class="goal-header-top">
+              <ion-card-subtitle class="category-subtitle">
+                Esquema Financiero
+              </ion-card-subtitle>
+            </div>
+            <ion-card-title>{{ scheme.name }}</ion-card-title>
+          </ion-card-header>
+
+          <ion-card-content>
+            <p class="goal-desc">{{ scheme.description }}</p>
+
+            <!-- Valores de Balance del Esquema -->
+            <div class="scheme-totals-container ion-margin-vertical">
+              <div class="scheme-total-item" *ngFor="let total of getEsquemaTotals(scheme)">
+                <span class="total-label">Balance Neto Consolidado:</span>
+                <span class="total-value" [ngClass]="total.amount >= 0 ? 'text-success' : 'text-danger'">
+                  {{ total.amount >= 0 ? '+' : '' }}{{ total.amount | number:'1.2-2' }} {{ total.unitName }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Desglose de Objetivos -->
+            <div class="scheme-breakdown-title">Fórmula y progreso:</div>
+            <div class="scheme-breakdown-list">
+              <div class="scheme-breakdown-item" *ngFor="let config of scheme.configs">
+                <ion-icon 
+                  [name]="config.operator === 'sum' ? 'trending-up-outline' : 'trending-down-outline'" 
+                  [color]="config.operator === 'sum' ? 'success' : 'warning'">
+                </ion-icon>
+                <span class="operator-symbol" [ngClass]="config.operator === 'sum' ? 'sum' : 'subtract'">
+                  {{ config.operator === 'sum' ? '+' : '-' }}
+                </span>
+                <span class="objective-name">
+                  {{ getObjetivoName(config.objetivoId) }}
+                </span>
+                <span class="objective-progress">
+                  {{ getGoalProgressById(config.objetivoId) | number:'1.2-2' }} {{ getObjetivoUnitName(config.objetivoId) }}
+                </span>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </div>
+
     <!-- RECIENTES TRANSACCIONES -->
     <div class="section-container ion-padding-horizontal">
       <div class="section-header">

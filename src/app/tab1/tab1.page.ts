@@ -37,15 +37,19 @@ import {
   cashOutline,
   trophyOutline,
   trashOutline,
-  chevronForwardOutline
+  chevronForwardOutline,
+  swapHorizontal,
+  trendingDownOutline
 } from 'ionicons/icons';
 import { Subscription, combineLatest } from 'rxjs';
 import { ObjetivoService } from '../services/objetivo.service';
 import { AmountUnitService } from '../services/amount-unit.service';
 import { TransaccionService } from '../services/transaccion.service';
+import { EsquemaFinancieroService } from '../services/esquema-financiero.service';
 import { Objetivo, Aviso } from '../models/objetivo.model';
 import { AmountUnit } from '../models/amount-unit.model';
 import { Transaccion } from '../models/transaccion.model';
+import { EsquemaFinanciero } from '../models/esquema-financiero.model';
 import { TransaccionesComponent } from '../components/transacciones/transacciones.component';
 
 @Component({
@@ -85,6 +89,7 @@ export class Tab1Page implements OnInit, OnDestroy {
   unidadesMonto: AmountUnit[] = [];
   transacciones: Transaccion[] = [];
   recentTransacciones: Transaccion[] = [];
+  esquemasFinancieros: EsquemaFinanciero[] = [];
   
   balances: { [key: string]: number } = { USDT: 0, EUR: 0, BS: 0 };
   isLoading = true;
@@ -95,6 +100,7 @@ export class Tab1Page implements OnInit, OnDestroy {
   private objetivoService = inject(ObjetivoService);
   private amountUnitService = inject(AmountUnitService);
   private transaccionService = inject(TransaccionService);
+  private esquemaFinancieroService = inject(EsquemaFinancieroService);
   private alertController = inject(AlertController);
   private toastController = inject(ToastController);
 
@@ -109,7 +115,9 @@ export class Tab1Page implements OnInit, OnDestroy {
       cashOutline,
       trophyOutline,
       trashOutline,
-      chevronForwardOutline
+      chevronForwardOutline,
+      swapHorizontal,
+      trendingDownOutline
     });
   }
 
@@ -124,17 +132,19 @@ export class Tab1Page implements OnInit, OnDestroy {
   loadData() {
     this.isLoading = true;
 
-    // Combinar los 3 flujos en tiempo real para evitar desincronizaciones de datos
+    // Combinar los 4 flujos en tiempo real para evitar desincronizaciones de datos
     this.subscriptions.add(
       combineLatest([
         this.objetivoService.getObjetivos(),
         this.amountUnitService.getAmountUnits(),
-        this.transaccionService.getTransacciones()
+        this.transaccionService.getTransacciones(),
+        this.esquemaFinancieroService.getEsquemasFinancieros()
       ]).subscribe({
-        next: ([objs, units, txs]) => {
+        next: ([objs, units, txs, schemes]) => {
           this.objetivos = objs;
           this.unidadesMonto = units;
           this.transacciones = txs;
+          this.esquemasFinancieros = schemes;
           
           this.calculateBalances();
           this.loadRecentTransactions();
@@ -262,5 +272,44 @@ export class Tab1Page implements OnInit, OnDestroy {
     });
 
     await alert.present();
+  }
+
+  // --- Métodos de Esquema Financiero ---
+
+  getEsquemaTotals(scheme: EsquemaFinanciero): { amount: number, unitName: string }[] {
+    const totalsMap: { [unitName: string]: number } = {};
+    
+    scheme.configs.forEach(config => {
+      const goal = this.objetivos.find(o => o.id === config.objetivoId);
+      if (!goal) return;
+      
+      const unitName = this.getUnitName(goal.unitId) || 'USD';
+      const progress = this.getGoalProgress(goal);
+      
+      if (totalsMap[unitName] === undefined) {
+        totalsMap[unitName] = 0;
+      }
+      
+      if (config.operator === 'sum') {
+        totalsMap[unitName] += progress;
+      } else if (config.operator === 'subtract') {
+        totalsMap[unitName] -= progress;
+      }
+    });
+    
+    return Object.keys(totalsMap).map(unitName => ({
+      amount: totalsMap[unitName],
+      unitName
+    }));
+  }
+
+  getGoalProgressById(objetivoId: string): number {
+    const goal = this.objetivos.find(o => o.id === objetivoId);
+    return goal ? this.getGoalProgress(goal) : 0;
+  }
+
+  getObjetivoUnitName(objetivoId: string): string {
+    const goal = this.objetivos.find(o => o.id === objetivoId);
+    return goal ? this.getUnitName(goal.unitId) : '';
   }
 }

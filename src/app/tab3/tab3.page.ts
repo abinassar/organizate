@@ -3,6 +3,7 @@ import { IonHeader, IonToolbar, IonTitle, IonContent } from '@ionic/angular/stan
 import { ConfiguracionComponent } from '../components/configuracion/configuracion.component';
 import { CategoriasComponent } from '../components/categorias/categorias.component';
 import { ObjetivosComponent } from '../components/objetivos/objetivos.component';
+import { EsquemasFinancierosComponent } from '../components/esquemas-financieros/esquemas-financieros.component';
 
 @Component({
   selector: 'app-tab3',
@@ -15,7 +16,8 @@ import { ObjetivosComponent } from '../components/objetivos/objetivos.component'
     IonContent, 
     ConfiguracionComponent, 
     CategoriasComponent, 
-    ObjetivosComponent
+    ObjetivosComponent,
+    EsquemasFinancierosComponent
   ],
 })
 export class Tab3Page {

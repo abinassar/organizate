@@ -1,0 +1,221 @@
+<ion-card class="config-card schemes-card">
+  <div class="card-hero">
+    <div class="status-icon-container">
+      <ion-icon class="pulse-icon" name="swap-horizontal"></ion-icon>
+    </div>
+    
+    <div class="hero-text">
+      <h2>Esquemas Financieros</h2>
+      <p>Configura relaciones de suma y resta entre tus objetivos financieros para ver tu balance neto consolidado.</p>
+    </div>
+  </div>
+
+  <ion-card-content class="ion-no-padding">
+    <!-- Spinner de carga -->
+    <div class="loading-container ion-padding ion-text-center" *ngIf="isLoading">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Cargando esquemas financieros...</p>
+    </div>
+
+    <!-- Lista de esquemas -->
+    <ion-list lines="inset" *ngIf="!isLoading && esquemas.length > 0">
+      <ion-item *ngFor="let scheme of esquemas" button (click)="openEditModal(scheme)">
+        <div slot="start" class="scheme-icon-badge">
+          <ion-icon name="swap-horizontal"></ion-icon>
+        </div>
+        
+        <ion-label>
+          <h3>{{ scheme.name }}</h3>
+          <p class="scheme-description">{{ scheme.description }}</p>
+          
+          <div class="scheme-details">
+            <!-- Badge de Moneda -->
+            <ion-badge color="tertiary" class="detail-badge">
+              <span>Moneda: {{ getEsquemaCurrency(scheme.configs) }}</span>
+            </ion-badge>
+
+            <!-- Badge del total de objetivos asociados -->
+            <ion-badge color="primary" class="detail-badge">
+              <span>{{ scheme.configs.length }} {{ scheme.configs.length === 1 ? 'objetivo' : 'objetivos' }}</span>
+            </ion-badge>
+          </div>
+
+          <!-- Previsualización de la fórmula -->
+          <div class="formula-preview ion-margin-top">
+            <span class="formula-label">Fórmula: </span>
+            <span *ngFor="let config of scheme.configs; let last = last" class="formula-item">
+              <span class="operator-symbol" [ngClass]="config.operator === 'sum' ? 'sum' : 'subtract'">
+                {{ config.operator === 'sum' ? '+' : '-' }}
+              </span>
+              <span class="objective-formula-name">{{ getObjetivoName(config.objetivoId) }}</span>
+              <span *ngIf="!last" class="formula-separator"> </span>
+            </span>
+          </div>
+        </ion-label>
+
+        <ion-buttons slot="end">
+          <ion-button color="medium" fill="clear" (click)="$event.stopPropagation(); openEditModal(scheme)">
+            <ion-icon slot="icon-only" name="pencil-outline"></ion-icon>
+          </ion-button>
+          <ion-button color="danger" fill="clear" (click)="confirmDelete($event, scheme)">
+            <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-item>
+    </ion-list>
+
+    <!-- Estado vacío -->
+    <div class="empty-container ion-padding ion-text-center" *ngIf="!isLoading && esquemas.length === 0">
+      <ion-icon name="swap-horizontal" class="empty-icon"></ion-icon>
+      <p>No tienes esquemas financieros creados aún. ¡Crea tu primera fórmula consolidada!</p>
+    </div>
+
+    <!-- Botón Agregar -->
+    <div class="action-container ion-padding">
+      <ion-button 
+        expand="block" 
+        (click)="openAddModal()"
+        class="add-btn">
+        <ion-icon slot="start" name="add-outline"></ion-icon>
+        Agregar Esquema Financiero
+      </ion-button>
+    </div>
+  </ion-card-content>
+</ion-card>
+
+<!-- Modal de Formulario -->
+<ion-modal [isOpen]="isModalOpen" (didDismiss)="closeModal()">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-buttons slot="start">
+          <ion-button (click)="closeModal()">
+            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+        <ion-title>{{ editingEsquema ? 'Editar Esquema' : 'Nuevo Esquema Financiero' }}</ion-title>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding modal-content">
+      <!-- Formulario Principal -->
+      <form [formGroup]="esquemaForm" (ngSubmit)="saveEsquema()">
+        
+        <!-- Nombre -->
+        <div class="form-field-container ion-margin-bottom">
+          <ion-item fill="outline" class="form-item">
+            <ion-label position="floating">Nombre del Esquema</ion-label>
+            <ion-input formControlName="name" placeholder="Ej. Balance Neto Mensual, Margen de Ahorro..."></ion-input>
+          </ion-item>
+          <ion-note 
+            *ngIf="esquemaForm.get('name')?.invalid && esquemaForm.get('name')?.touched" 
+            color="danger" 
+            class="form-error-note">
+            <span *ngIf="esquemaForm.get('name')?.errors?.['required']">El nombre es requerido.</span>
+            <span *ngIf="esquemaForm.get('name')?.errors?.['minlength']">Mínimo 2 caracteres.</span>
+            <span *ngIf="esquemaForm.get('name')?.errors?.['maxlength']">Máximo 50 caracteres.</span>
+          </ion-note>
+        </div>
+
+        <!-- Descripción -->
+        <div class="form-field-container ion-margin-bottom">
+          <ion-item fill="outline" class="form-item">
+            <ion-label position="floating">Descripción</ion-label>
+            <ion-textarea formControlName="description" placeholder="Describe qué consolida o calcula este esquema..."></ion-textarea>
+          </ion-item>
+          <ion-note 
+            *ngIf="esquemaForm.get('description')?.invalid && esquemaForm.get('description')?.touched" 
+            color="danger" 
+            class="form-error-note">
+            <span *ngIf="esquemaForm.get('description')?.errors?.['required']">La descripción es requerida.</span>
+            <span *ngIf="esquemaForm.get('description')?.errors?.['maxlength']">Máximo 200 caracteres.</span>
+          </ion-note>
+        </div>
+      </form>
+
+      <!-- Sección de Asociación de Objetivos -->
+      <div class="objective-config-section ion-margin-top">
+        <div class="section-title-wrapper">
+          <ion-icon name="information-circle-outline" color="primary"></ion-icon>
+          <h4>Configuración de la Fórmula</h4>
+        </div>
+        <p class="section-subtitle">Selecciona los objetivos financieros y el operador matemático para sumarlos o restarlos.</p>
+
+        <!-- Formulario para agregar objetivos a la lista -->
+        <form [formGroup]="configForm" (ngSubmit)="addConfigItem()" class="config-item-form">
+          <div class="form-row ion-margin-bottom">
+            <!-- Objetivo Financiero -->
+            <div class="form-field-container form-col-7">
+              <ion-item fill="outline" class="form-item">
+                <ion-label position="floating">Objetivo Financiero</ion-label>
+                <ion-select formControlName="objetivoId" placeholder="Seleccione Objetivo" okText="Seleccionar" cancelText="Cancelar">
+                  <ion-select-option *ngFor="let obj of objetivos" [value]="obj.id">
+                    {{ obj.name }} ({{ getObjetivoUnitName(obj.id!) }})
+                  </ion-select-option>
+                </ion-select>
+              </ion-item>
+            </div>
+
+            <!-- Operador -->
+            <div class="form-field-container form-col-3">
+              <ion-item fill="outline" class="form-item">
+                <ion-label position="floating">Operador</ion-label>
+                <ion-select formControlName="operator" placeholder="Operador" okText="Seleccionar" cancelText="Cancelar">
+                  <ion-select-option value="sum">Sumar (+)</ion-select-option>
+                  <ion-select-option value="subtract">Restar (-)</ion-select-option>
+                </ion-select>
+              </ion-item>
+            </div>
+
+            <!-- Botón Agregar Item -->
+            <div class="form-col-2 btn-col">
+              <ion-button type="submit" color="primary" fill="solid" [disabled]="configForm.invalid" class="add-config-btn">
+                <ion-icon slot="icon-only" name="add-outline"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+        </form>
+
+        <!-- Lista Temporal de Objetivos del Esquema -->
+        <div class="temp-configs-container">
+          <div class="temp-configs-header">Objetivos en este Esquema:</div>
+          
+          <div class="empty-temp-configs ion-padding ion-text-center" *ngIf="tempConfigs.length === 0">
+            <ion-icon name="alert-circle-outline" color="medium"></ion-icon>
+            <p>No has agregado ningún objetivo financiero a la fórmula todavía.</p>
+          </div>
+
+          <ion-list lines="none" *ngIf="tempConfigs.length > 0" class="temp-configs-list">
+            <ion-item *ngFor="let config of tempConfigs; let i = index" class="temp-config-item">
+              <span slot="start" class="operator-badge-inline" [ngClass]="config.operator === 'sum' ? 'sum' : 'subtract'">
+                {{ config.operator === 'sum' ? '+' : '-' }}
+              </span>
+              
+              <ion-label>
+                <h3>{{ getObjetivoName(config.objetivoId) }}</h3>
+                <p>Moneda: {{ getObjetivoUnitName(config.objetivoId) }}</p>
+              </ion-label>
+
+              <ion-button slot="end" color="danger" fill="clear" (click)="removeConfigItem(i)">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-button>
+            </ion-item>
+          </ion-list>
+        </div>
+      </div>
+
+      <!-- Botón de Guardado Final -->
+      <div class="modal-actions ion-margin-top">
+        <ion-button 
+          expand="block" 
+          color="success" 
+          [disabled]="esquemaForm.invalid || tempConfigs.length === 0" 
+          (click)="saveEsquema()"
+          class="save-btn">
+          <ion-icon slot="start" name="checkmark-outline"></ion-icon>
+          Guardar Esquema Financiero
+        </ion-button>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>

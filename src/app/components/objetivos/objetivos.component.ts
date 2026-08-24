@@ -55,6 +55,8 @@ import { AmountUnit } from '../../models/amount-unit.model';
 import { Objetivo, Aviso } from '../../models/objetivo.model';
 import { Transaccion } from '../../models/transaccion.model';
 import { TransaccionService } from '../../services/transaccion.service';
+import { EsquemaFinancieroService } from '../../services/esquema-financiero.service';
+import { EsquemaFinanciero } from '../../models/esquema-financiero.model';
 import { IonProgressBar } from '@ionic/angular/standalone';
 
 @Component({
@@ -95,6 +97,7 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
   periodicidades: Periodicity[] = [];
   unidadesMonto: AmountUnit[] = [];
   transacciones: Transaccion[] = [];
+  esquemasFinancieros: EsquemaFinanciero[] = [];
   
   isLoading = true;
   isModalOpen = false;
@@ -115,6 +118,7 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
   private amountUnitService = inject(AmountUnitService);
   private objetivoService = inject(ObjetivoService);
   private transaccionService = inject(TransaccionService);
+  private esquemaService = inject(EsquemaFinancieroService);
   private alertController = inject(AlertController);
 
   constructor() {
@@ -199,6 +203,16 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
         error: (err) => console.error('Error al cargar transacciones:', err)
       })
     );
+
+    this.subscriptions.add(
+      this.esquemaService.getEsquemasFinancieros().subscribe({
+        next: (esq) => {
+          this.esquemasFinancieros = esq;
+          this.checkLoadingState();
+        },
+        error: (err) => console.error('Error al cargar esquemas financieros:', err)
+      })
+    );
   }
 
   ngOnDestroy() {
@@ -212,7 +226,8 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
       this.periodicidades !== undefined && 
       this.unidadesMonto !== undefined && 
       this.objetivos !== undefined &&
-      this.transacciones !== undefined
+      this.transacciones !== undefined &&
+      this.esquemasFinancieros !== undefined
     ) {
       setTimeout(() => {
         this.isLoading = false;
@@ -488,6 +503,22 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
   async confirmDelete(event: Event, obj: Objetivo) {
     event.stopPropagation();
     if (!obj.id) return;
+
+    // VALIDACIÓN: No permitir eliminar objetivo si forma parte de algún esquema financiero activo
+    const esquemasAsociados = this.esquemasFinancieros.filter(esq => 
+      esq.configs.some(c => c.objetivoId === obj.id)
+    );
+
+    if (esquemasAsociados.length > 0) {
+      const nombresEsquemas = esquemasAsociados.map(e => `"${e.name}"`).join(', ');
+      const alertError = await this.alertController.create({
+        header: 'Acción Bloqueada',
+        message: `No se puede eliminar el objetivo "${obj.name}" porque está siendo utilizado en el/los esquema(s) financiero(s): ${nombresEsquemas}. Por favor desvincúlalo de allí primero.`,
+        buttons: ['Entendido']
+      });
+      await alertError.present();
+      return;
+    }
 
     const alert = await this.alertController.create({
       header: 'Confirmar Eliminación',
