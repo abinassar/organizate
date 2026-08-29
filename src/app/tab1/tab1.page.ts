@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { 
   IonHeader, 
   IonToolbar, 
@@ -18,11 +19,12 @@ import {
   IonLabel, 
   IonList, 
   IonItem, 
-  IonNote, 
   IonBadge, 
   IonProgressBar, 
   IonModal, 
   IonSpinner,
+  IonSelect,
+  IonSelectOption,
   AlertController,
   ToastController
 } from '@ionic/angular/standalone';
@@ -39,7 +41,8 @@ import {
   trashOutline,
   chevronForwardOutline,
   swapHorizontal,
-  trendingDownOutline
+  trendingDownOutline,
+  calendarOutline
 } from 'ionicons/icons';
 import { Subscription, combineLatest } from 'rxjs';
 import { ObjetivoService } from '../services/objetivo.service';
@@ -61,6 +64,7 @@ import { TransaccionesComponent } from '../components/transacciones/transaccione
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     IonHeader, 
     IonToolbar, 
     IonTitle, 
@@ -78,11 +82,12 @@ import { TransaccionesComponent } from '../components/transacciones/transaccione
     IonLabel, 
     IonList, 
     IonItem, 
-    IonNote, 
     IonBadge, 
     IonProgressBar, 
     IonModal, 
     IonSpinner,
+    IonSelect,
+    IonSelectOption,
     TransaccionesComponent
   ],
 })
@@ -90,6 +95,7 @@ export class Tab1Page implements OnInit, OnDestroy {
   objetivos: Objetivo[] = [];
   unidadesMonto: AmountUnit[] = [];
   transacciones: Transaccion[] = [];
+  allTransacciones: Transaccion[] = [];
   recentTransacciones: Transaccion[] = [];
   esquemasFinancieros: EsquemaFinanciero[] = [];
   categories: Category[] = [];
@@ -97,6 +103,9 @@ export class Tab1Page implements OnInit, OnDestroy {
   balances: { [key: string]: number } = { USDT: 0, EUR: 0, BS: 0 };
   isLoading = true;
   isTransaccionesModalOpen = false;
+
+  availablePeriods: { value: string; label: string }[] = [];
+  selectedPeriod = '';
 
   private subscriptions = new Subscription();
   
@@ -121,7 +130,8 @@ export class Tab1Page implements OnInit, OnDestroy {
       trashOutline,
       chevronForwardOutline,
       swapHorizontal,
-      trendingDownOutline
+      trendingDownOutline,
+      calendarOutline
     });
   }
 
@@ -148,12 +158,17 @@ export class Tab1Page implements OnInit, OnDestroy {
         next: ([objs, units, txs, schemes, cats]) => {
           this.objetivos = objs;
           this.unidadesMonto = units;
-          this.transacciones = txs;
+          this.allTransacciones = txs;
           this.esquemasFinancieros = schemes;
           this.categories = cats;
           
-          this.calculateBalances();
-          this.loadRecentTransactions();
+          this.updateAvailablePeriods();
+          
+          if (!this.selectedPeriod) {
+            this.selectedPeriod = this.getCurrentPeriodString();
+          }
+          
+          this.filterTransacciones();
           
           this.isLoading = false;
         },
@@ -348,5 +363,54 @@ export class Tab1Page implements OnInit, OnDestroy {
   getObjetivoUnitName(objetivoId: string): string {
     const goal = this.objetivos.find(o => o.id === objetivoId);
     return goal ? this.getUnitName(goal.unitId) : '';
+  }
+
+  getCurrentPeriodString(): string {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  formatPeriodLabel(period: string): string {
+    if (!period || period === 'all') return 'Todo el Historial';
+    const [year, monthStr] = period.split('-');
+    const months = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    const monthIdx = parseInt(monthStr, 10) - 1;
+    const monthName = months[monthIdx] || monthStr;
+    return `${monthName} ${year}`;
+  }
+
+  updateAvailablePeriods() {
+    const periodsSet = new Set<string>();
+    
+    // Add current period to options so there's always at least the current month
+    const currentPeriod = this.getCurrentPeriodString();
+    periodsSet.add(currentPeriod);
+
+    this.allTransacciones.forEach(tx => {
+      if (tx.mes) {
+        periodsSet.add(tx.mes);
+      }
+    });
+
+    const sortedPeriods = Array.from(periodsSet).sort((a, b) => b.localeCompare(a));
+
+    this.availablePeriods = sortedPeriods.map(p => ({
+      value: p,
+      label: this.formatPeriodLabel(p)
+    }));
+  }
+
+  filterTransacciones() {
+    if (this.selectedPeriod === 'all') {
+      this.transacciones = [...this.allTransacciones];
+    } else {
+      this.transacciones = this.allTransacciones.filter(tx => tx.mes === this.selectedPeriod);
+    }
+    
+    this.calculateBalances();
+    this.loadRecentTransactions();
   }
 }

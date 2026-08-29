@@ -6,6 +6,8 @@ export interface Transaccion {
   amount: number;       // Amount of the transaction
   currency: string;     // Currency code: USDT, EUR, BS, etc.
   description: string;  // Description of the transaction
+  mes: string;          // Universal month code (e.g., "YYYY-MM")
+  fecha: Date;          // Date of the transaction
   createdAt?: Date;
   updatedAt?: Date;
   active: boolean;

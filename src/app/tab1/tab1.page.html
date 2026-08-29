@@ -27,6 +27,34 @@
       </ion-button>
     </div>
 
+    <!-- FILTRO DE PERÍODO -->
+    <div class="filter-container ion-padding-horizontal">
+      <div class="filter-card">
+        <div class="filter-glow"></div>
+        <div class="filter-content">
+          <div class="filter-icon">
+            <ion-icon name="calendar-outline"></ion-icon>
+          </div>
+          <div class="filter-label">
+            <span class="title">Período de Análisis</span>
+            <span class="subtitle">Filtrando balances y operaciones</span>
+          </div>
+          <div class="filter-select-wrapper">
+            <ion-select 
+              interface="popover" 
+              [(ngModel)]="selectedPeriod" 
+              (ionChange)="filterTransacciones()" 
+              class="period-select">
+              <ion-select-option value="all">Todo el Historial</ion-select-option>
+              <ion-select-option *ngFor="let period of availablePeriods" [value]="period.value">
+                {{ period.label }}
+              </ion-select-option>
+            </ion-select>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- TARJETAS DE BALANCE -->
     <div class="balances-container ion-padding-horizontal">
       <ion-grid class="ion-no-padding">
@@ -233,7 +261,7 @@
             </span>
             <h3>{{ tx.description }}</h3>
             <div class="tx-sub-info">
-              <span class="tx-date">{{ tx.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span class="tx-date">{{ (tx.fecha || tx.createdAt) | date:'dd/MM/yyyy HH:mm' }}</span>
               <span class="tx-type-tag" *ngIf="tx.operationId">P2P</span>
               <span class="tx-type-tag manual" *ngIf="!tx.operationId">Manual</span>
             </div>

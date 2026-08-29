@@ -71,7 +71,7 @@
               {{ getCategory(tx.categoryId)?.name }}
             </span>
             <h3>{{ tx.description }}</h3>
-            <p class="tx-date">{{ tx.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
+            <p class="tx-date">{{ (tx.fecha || tx.createdAt) | date:'dd/MM/yyyy HH:mm' }}</p>
           </ion-label>
           <div slot="end" class="right-action-wrapper">
             <span class="amount-tag text-success">
@@ -129,6 +129,33 @@
             color="danger" class="form-error-note">
             Debe seleccionar una categoría.
           </ion-note>
+        </div>
+
+        <!-- Mes y Fecha de la Transacción -->
+        <div class="form-row ion-margin-bottom">
+          <!-- Mes Universal -->
+          <div class="form-field-container form-col-6">
+            <ion-item fill="outline" class="form-item">
+              <ion-label position="stacked">Mes (Código Universal)</ion-label>
+              <ion-input type="month" formControlName="mes"></ion-input>
+            </ion-item>
+            <ion-note *ngIf="transaccionForm.get('mes')?.invalid && transaccionForm.get('mes')?.touched"
+              color="danger" class="form-error-note">
+              El mes es requerido.
+            </ion-note>
+          </div>
+
+          <!-- Fecha de Transacción -->
+          <div class="form-field-container form-col-6">
+            <ion-item fill="outline" class="form-item">
+              <ion-label position="stacked">Fecha de Transacción</ion-label>
+              <ion-input type="date" formControlName="fecha"></ion-input>
+            </ion-item>
+            <ion-note *ngIf="transaccionForm.get('fecha')?.invalid && transaccionForm.get('fecha')?.touched"
+              color="danger" class="form-error-note">
+              La fecha es requerida.
+            </ion-note>
+          </div>
         </div>
 
         <!-- Sugerencias de Monto (Solo en modo Operación) -->

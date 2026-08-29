@@ -121,13 +121,32 @@ export class TransaccionesComponent implements OnInit, OnDestroy {
     this.subscriptions.unsubscribe();
   }
 
+  formatDateForInput(date?: Date | number): string {
+    if (!date) return '';
+    const d = new Date(date);
+    const month = '' + (d.getMonth() + 1);
+    const day = '' + d.getDate();
+    const year = d.getFullYear();
+    return [year, month.padStart(2, '0'), day.padStart(2, '0')].join('-');
+  }
+
   private initForm() {
+    const now = new Date();
+    const defaultMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    let defaultFecha = this.formatDateForInput(now);
+
+    if (this.operation && this.operation.createTime) {
+      defaultFecha = this.formatDateForInput(this.operation.createTime);
+    }
+
     this.transaccionForm = this.fb.group({
       objetivoId: ['', [Validators.required]],
       categoryId: ['', [Validators.required]],
       amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
       currency: ['USDT'], // Default currency
-      description: ['', [Validators.required, Validators.maxLength(150)]]
+      description: ['', [Validators.required, Validators.maxLength(150)]],
+      mes: [defaultMonth, [Validators.required]],
+      fecha: [defaultFecha, [Validators.required]]
     });
 
     // En modo de operación, la moneda se determina automáticamente por el objetivo
@@ -297,6 +316,8 @@ export class TransaccionesComponent implements OnInit, OnDestroy {
       amount: Number(formVal.amount),
       currency: txCurrency.toUpperCase(),
       description: formVal.description.trim(),
+      mes: formVal.mes,
+      fecha: new Date(formVal.fecha + 'T00:00:00'),
       ...(this.operation && { operationId: this.operation.orderNumber })
     };
 
@@ -304,6 +325,13 @@ export class TransaccionesComponent implements OnInit, OnDestroy {
       await this.transaccionService.addTransaccion(newTx);
       this.showToast('Transacción asociada exitosamente.', 'success');
       
+      const now = new Date();
+      const defaultMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      let defaultFecha = this.formatDateForInput(now);
+      if (this.operation && this.operation.createTime) {
+        defaultFecha = this.formatDateForInput(this.operation.createTime);
+      }
+
       // Resetear formulario manteniendo la descripción por defecto si es modo operación
       if (this.operation) {
         const tradeTypeLabel = this.operation.tradeType === 'BUY' ? 'Compra' : 'Venta';
@@ -312,7 +340,9 @@ export class TransaccionesComponent implements OnInit, OnDestroy {
           objetivoId: '',
           categoryId: '',
           amount: null,
-          description: `${tradeTypeLabel} P2P con ${userNick}`
+          description: `${tradeTypeLabel} P2P con ${userNick}`,
+          mes: defaultMonth,
+          fecha: defaultFecha
         });
       } else {
         this.transaccionForm.reset({
@@ -320,7 +350,9 @@ export class TransaccionesComponent implements OnInit, OnDestroy {
           categoryId: '',
           amount: null,
           currency: 'USDT',
-          description: ''
+          description: '',
+          mes: defaultMonth,
+          fecha: defaultFecha
         });
       }
     } catch (err) {

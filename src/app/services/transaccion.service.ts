@@ -50,6 +50,10 @@ export class TransaccionService {
           const transacciones: Transaccion[] = [];
           querySnapshot.forEach((doc) => {
             const data = doc.data();
+            const createdDate = toDateSafe(data['createdAt']);
+            const defaultMes = createdDate ? `${createdDate.getFullYear()}-${String(createdDate.getMonth() + 1).padStart(2, '0')}` : '';
+            const txFecha = toDateSafe(data['fecha']) || createdDate || new Date();
+
             transacciones.push({
               id: doc.id,
               operationId: data['operationId'],
@@ -58,16 +62,18 @@ export class TransaccionService {
               amount: data['amount'] || 0,
               currency: data['currency'] || '',
               description: data['description'] || '',
+              mes: data['mes'] || defaultMes,
+              fecha: txFecha,
               active: data['active'],
-              createdAt: toDateSafe(data['createdAt']),
+              createdAt: createdDate,
               updatedAt: toDateSafe(data['updatedAt'])
             });
           });
           
-          // Ordenar por fecha descendente
+          // Ordenar por fecha de transacción descendente
           transacciones.sort((a, b) => {
-            const dateA = a.createdAt ? a.createdAt.getTime() : 0;
-            const dateB = b.createdAt ? b.createdAt.getTime() : 0;
+            const dateA = a.fecha ? a.fecha.getTime() : 0;
+            const dateB = b.fecha ? b.fecha.getTime() : 0;
             return dateB - dateA;
           });
           
