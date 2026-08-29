@@ -54,7 +54,6 @@ export class ObjetivoService {
               id: doc.id,
               name: data['name'],
               description: data['description'],
-              categoryId: data['categoryId'],
               typeId: data['typeId'],
               periodicityId: data['periodicityId'] || '',
               amount: data['amount'] || 0,

@@ -14,11 +14,8 @@
 
   <!-- Pull to Refresh -->
   <ion-refresher slot="fixed" (ionRefresh)="loadOrders($event)">
-    <ion-refresher-content 
-      pullingIcon="arrow-down-outline" 
-      pullingText="Desliza para actualizar" 
-      refreshingSpinner="crescent" 
-      refreshingText="Obteniendo transacciones...">
+    <ion-refresher-content pullingIcon="arrow-down-outline" pullingText="Desliza para actualizar"
+      refreshingSpinner="crescent" refreshingText="Obteniendo transacciones...">
     </ion-refresher-content>
   </ion-refresher>
 
@@ -31,7 +28,8 @@
       <ion-card-content class="ion-text-center">
         <h2>Binance Sin Configurar</h2>
         <p>Las claves de API (Key y Secret) no se encuentran configuradas en tu archivo de entorno o son inválidas.</p>
-        <p class="instruction-text">Por favor ve a la pestaña de <strong>Configuración</strong> para revisar el estado de tu cuenta e inicializar el servicio.</p>
+        <p class="instruction-text">Por favor ve a la pestaña de <strong>Configuración</strong> para revisar el estado
+          de tu cuenta e inicializar el servicio.</p>
       </ion-card-content>
     </ion-card>
   </div>
@@ -39,11 +37,8 @@
   <div *ngIf="binanceConfigured">
     <!-- Barra de búsqueda y Filtros por Segmento -->
     <div class="filter-wrapper">
-      <ion-searchbar 
-        placeholder="Buscar por usuario o moneda..." 
-        [value]="searchQuery"
-        (ionInput)="onSearchChange($event)"
-        class="custom-searchbar">
+      <ion-searchbar placeholder="Buscar por usuario o moneda..." [value]="searchQuery"
+        (ionInput)="onSearchChange($event)" class="custom-searchbar">
       </ion-searchbar>
 
       <ion-segment [value]="selectedSegment" (ionChange)="onSegmentChange($event)" class="custom-segment">
@@ -91,7 +86,8 @@
         </div>
         <h3>Sin resultados</h3>
         <p *ngIf="searchQuery || selectedSegment !== 'all'">Intenta cambiar los filtros o la búsqueda.</p>
-        <p *ngIf="!searchQuery && selectedSegment === 'all'">No se encontraron órdenes registradas en tu historial reciente.</p>
+        <p *ngIf="!searchQuery && selectedSegment === 'all'">No se encontraron órdenes registradas en tu historial
+          reciente.</p>
       </div>
 
       <ion-list lines="none" *ngIf="filteredOrders.length > 0" class="premium-list">
@@ -113,7 +109,7 @@
                 {{ getStatusLabel(order.orderStatus) }}
               </ion-badge>
             </div>
-            
+
             <div class="order-subdetails">
               <span class="order-date">{{ order.createTime | date:'dd/MM/yyyy HH:mm' }}</span>
               <span class="separator">•</span>
@@ -121,7 +117,7 @@
                 Tasa: {{ order.unitPrice | number:'1.2-8' }} {{ order.fiat }}
               </span>
             </div>
-            
+
             <div class="order-id">
               Nº {{ order.orderNumber }}
             </div>
@@ -137,6 +133,11 @@
             <div class="crypto-amount">
               {{ order.amount | number:'1.2-8' }} {{ order.asset }}
             </div>
+            <!-- Comisión/Fee cobrada (si es mayor a 0) -->
+            <div class="commission-detail" *ngIf="order.commission && +order.commission > 0"
+              style="font-size: 0.72rem; color: var(--ion-color-step-600, #777); font-weight: 500; margin-bottom: 2px;">
+              Comisión: {{ order.commission | number:'1.2-8' }} {{ order.asset }}
+            </div>
             <!-- Rol de Anuncio -->
             <div class="user-role">
               {{ order.advertisementRole === 'MAKER' ? 'Anunciante' : 'Taker' }}
@@ -144,7 +145,8 @@
           </div>
 
           <!-- Botón de Opciones (Gestionar objetivos) -->
-          <ion-button slot="end" fill="clear" color="medium" (click)="abrirMenuOperacion($event, order)" class="option-menu-btn">
+          <ion-button slot="end" fill="clear" color="medium" (click)="abrirMenuOperacion($event, order)"
+            class="option-menu-btn">
             <ion-icon slot="icon-only" name="ellipsis-vertical-outline"></ion-icon>
           </ion-button>
         </ion-item>

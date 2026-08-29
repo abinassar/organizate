@@ -46,10 +46,12 @@ import { ObjetivoService } from '../services/objetivo.service';
 import { AmountUnitService } from '../services/amount-unit.service';
 import { TransaccionService } from '../services/transaccion.service';
 import { EsquemaFinancieroService } from '../services/esquema-financiero.service';
+import { CategoryService } from '../services/category.service';
 import { Objetivo, Aviso } from '../models/objetivo.model';
 import { AmountUnit } from '../models/amount-unit.model';
 import { Transaccion } from '../models/transaccion.model';
 import { EsquemaFinanciero } from '../models/esquema-financiero.model';
+import { Category } from '../models/category.model';
 import { TransaccionesComponent } from '../components/transacciones/transacciones.component';
 
 @Component({
@@ -90,6 +92,7 @@ export class Tab1Page implements OnInit, OnDestroy {
   transacciones: Transaccion[] = [];
   recentTransacciones: Transaccion[] = [];
   esquemasFinancieros: EsquemaFinanciero[] = [];
+  categories: Category[] = [];
   
   balances: { [key: string]: number } = { USDT: 0, EUR: 0, BS: 0 };
   isLoading = true;
@@ -101,6 +104,7 @@ export class Tab1Page implements OnInit, OnDestroy {
   private amountUnitService = inject(AmountUnitService);
   private transaccionService = inject(TransaccionService);
   private esquemaFinancieroService = inject(EsquemaFinancieroService);
+  private categoryService = inject(CategoryService);
   private alertController = inject(AlertController);
   private toastController = inject(ToastController);
 
@@ -132,19 +136,21 @@ export class Tab1Page implements OnInit, OnDestroy {
   loadData() {
     this.isLoading = true;
 
-    // Combinar los 4 flujos en tiempo real para evitar desincronizaciones de datos
+    // Combinar los 5 flujos en tiempo real para evitar desincronizaciones de datos
     this.subscriptions.add(
       combineLatest([
         this.objetivoService.getObjetivos(),
         this.amountUnitService.getAmountUnits(),
         this.transaccionService.getTransacciones(),
-        this.esquemaFinancieroService.getEsquemasFinancieros()
+        this.esquemaFinancieroService.getEsquemasFinancieros(),
+        this.categoryService.getCategories()
       ]).subscribe({
-        next: ([objs, units, txs, schemes]) => {
+        next: ([objs, units, txs, schemes, cats]) => {
           this.objetivos = objs;
           this.unidadesMonto = units;
           this.transacciones = txs;
           this.esquemasFinancieros = schemes;
+          this.categories = cats;
           
           this.calculateBalances();
           this.loadRecentTransactions();
@@ -191,6 +197,10 @@ export class Tab1Page implements OnInit, OnDestroy {
   getUnitName(unitId: string): string {
     const unit = this.unidadesMonto.find(u => u.id === unitId);
     return unit ? unit.name : '';
+  }
+
+  getCategory(categoryId: string): Category | undefined {
+    return this.categories.find(c => c.id === categoryId);
   }
 
   getObjetivoName(objetivoId: string): string {

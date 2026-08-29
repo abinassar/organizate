@@ -89,9 +89,6 @@
           <div class="goal-glow"></div>
           <ion-card-header>
             <div class="goal-header-top">
-              <ion-card-subtitle class="category-subtitle">
-                {{ goal.categoryName || 'General' }}
-              </ion-card-subtitle>
               <!-- Porcentaje -->
               <ion-badge [color]="getGoalPercentage(goal) >= 1 ? 'success' : 'primary'" class="pct-badge">
                 {{ getGoalPercentageLabel(goal) }}
@@ -216,9 +213,12 @@
 
       <ion-list class="premium-list" lines="none" *ngIf="transacciones.length > 0">
         <ion-item *ngFor="let tx of recentTransacciones" class="tx-list-item">
-          <!-- Icono indicador de tipo (asociado a P2P o manual) -->
-          <div slot="start" class="tx-icon-wrapper" [ngClass]="tx.operationId ? 'p2p-tx' : 'manual-tx'">
-            <ion-icon [name]="tx.operationId ? 'cash-outline' : 'wallet-outline'"></ion-icon>
+          <!-- Icono indicador de categoría -->
+          <div slot="start" class="tx-icon-wrapper" 
+               [ngClass]="tx.operationId ? 'p2p-tx' : 'manual-tx'"
+               [style.background-color]="getCategory(tx.categoryId)?.color ? getCategory(tx.categoryId)?.color + '1a' : ''"
+               [style.color]="getCategory(tx.categoryId)?.color || ''">
+            <ion-icon [name]="getCategory(tx.categoryId)?.icon || (tx.operationId ? 'cash-outline' : 'wallet-outline')"></ion-icon>
           </div>
 
           <ion-label>

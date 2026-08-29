@@ -48,6 +48,9 @@
           <div class="amount-block crypto">
             <span class="block-label">Monto Cripto</span>
             <span class="block-value">{{ operation.amount | number:'1.2-8' }} {{ operation.asset }}</span>
+            <span class="fee-hint" *ngIf="operation.takerCommission && +operation.takerCommission > 0" style="font-size: 0.72rem; color: var(--ion-color-step-600, #777); display: block; margin-top: 4px; font-weight: 500;">
+              (Neto: {{ operation.netAmount | number:'1.2-8' }} + Fee: {{ operation.takerCommission | number:'1.2-8' }})
+            </span>
           </div>
         </div>
       </div>
@@ -64,6 +67,9 @@
         <ion-item *ngFor="let tx of transaccionesAsociadas" class="associated-item">
           <ion-label>
             <span class="goal-tag">{{ getObjetivoName(tx.objetivoId) }}</span>
+            <span class="category-tag" *ngIf="getCategory(tx.categoryId)" [style.color]="getCategory(tx.categoryId)?.color" [style.background-color]="(getCategory(tx.categoryId)?.color || '#9e9e9e') + '15'">
+              {{ getCategory(tx.categoryId)?.name }}
+            </span>
             <h3>{{ tx.description }}</h3>
             <p class="tx-date">{{ tx.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
           </ion-label>
@@ -109,17 +115,37 @@
           </ion-note>
         </div>
 
+        <!-- Selector de Categoría -->
+        <div class="form-field-container ion-margin-bottom">
+          <ion-item fill="outline" class="form-item">
+            <ion-label position="floating">Categoría Relacionada</ion-label>
+            <ion-select formControlName="categoryId" placeholder="Seleccione una categoría" okText="Seleccionar" cancelText="Cancelar">
+              <ion-select-option *ngFor="let cat of categories" [value]="cat.id">
+                {{ cat.name }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+          <ion-note *ngIf="transaccionForm.get('categoryId')?.invalid && transaccionForm.get('categoryId')?.touched"
+            color="danger" class="form-error-note">
+            Debe seleccionar una categoría.
+          </ion-note>
+        </div>
+
         <!-- Sugerencias de Monto (Solo en modo Operación) -->
         <div class="amount-suggestions-wrapper ion-margin-bottom" *ngIf="operation">
           <span class="suggestions-title">Copiar monto de la operación:</span>
-          <div class="chips-container">
+          <div class="chips-container" style="display: flex; flex-wrap: wrap; gap: 8px;">
             <ion-chip class="suggested-chip fiat" (click)="copiarMonto(operation.totalPrice)">
               <ion-icon name="cash-outline"></ion-icon>
               <ion-label>{{ operation.totalPrice }} (Fiat)</ion-label>
             </ion-chip>
             <ion-chip class="suggested-chip crypto" (click)="copiarMonto(operation.amount)">
               <ion-icon name="cash-outline"></ion-icon>
-              <ion-label>{{ operation.amount }} (Cripto)</ion-label>
+              <ion-label>{{ operation.amount }} (Total Cripto)</ion-label>
+            </ion-chip>
+            <ion-chip class="suggested-chip crypto-net" (click)="copiarMonto(operation.netAmount)" *ngIf="operation.takerCommission && +operation.takerCommission > 0" style="--background: rgba(var(--ion-color-medium-rgb, 146, 148, 156), 0.1); color: var(--ion-color-medium, #92949c);">
+              <ion-icon name="cash-outline"></ion-icon>
+              <ion-label>{{ operation.netAmount }} (Neto Cripto)</ion-label>
             </ion-chip>
           </div>
         </div>

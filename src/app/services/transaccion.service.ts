@@ -54,6 +54,7 @@ export class TransaccionService {
               id: doc.id,
               operationId: data['operationId'],
               objetivoId: data['objetivoId'],
+              categoryId: data['categoryId'] || '',
               amount: data['amount'] || 0,
               currency: data['currency'] || '',
               description: data['description'] || '',

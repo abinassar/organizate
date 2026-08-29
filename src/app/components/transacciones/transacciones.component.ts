@@ -40,9 +40,11 @@ import { Subscription } from 'rxjs';
 import { ObjetivoService } from '../../services/objetivo.service';
 import { AmountUnitService } from '../../services/amount-unit.service';
 import { TransaccionService } from '../../services/transaccion.service';
+import { CategoryService } from '../../services/category.service';
 import { Objetivo } from '../../models/objetivo.model';
 import { AmountUnit } from '../../models/amount-unit.model';
 import { Transaccion } from '../../models/transaccion.model';
+import { Category } from '../../models/category.model';
 
 @Component({
   selector: 'app-transacciones',
@@ -78,6 +80,7 @@ export class TransaccionesComponent implements OnInit, OnDestroy {
   objetivos: Objetivo[] = [];
   unidadesMonto: AmountUnit[] = [];
   transaccionesAsociadas: Transaccion[] = [];
+  categories: Category[] = [];
   
   isLoading = true;
   isSaving = false;
@@ -89,6 +92,7 @@ export class TransaccionesComponent implements OnInit, OnDestroy {
   private objetivoService = inject(ObjetivoService);
   private amountUnitService = inject(AmountUnitService);
   private transaccionService = inject(TransaccionService);
+  private categoryService = inject(CategoryService);
   private toastController = inject(ToastController);
   private alertController = inject(AlertController);
 
@@ -120,6 +124,7 @@ export class TransaccionesComponent implements OnInit, OnDestroy {
   private initForm() {
     this.transaccionForm = this.fb.group({
       objetivoId: ['', [Validators.required]],
+      categoryId: ['', [Validators.required]],
       amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
       currency: ['USDT'], // Default currency
       description: ['', [Validators.required, Validators.maxLength(150)]]
@@ -188,10 +193,24 @@ export class TransaccionesComponent implements OnInit, OnDestroy {
         }
       })
     );
+
+    // 4. Cargar categorías
+    this.subscriptions.add(
+      this.categoryService.getCategories().subscribe({
+        next: (cats) => {
+          this.categories = cats;
+          this.checkLoadingState();
+        },
+        error: (err) => {
+          console.error('Error al cargar categorías:', err);
+          this.checkLoadingState();
+        }
+      })
+    );
   }
 
   private checkLoadingState() {
-    if (this.objetivos !== undefined && this.unidadesMonto !== undefined && this.transaccionesAsociadas !== undefined) {
+    if (this.objetivos !== undefined && this.unidadesMonto !== undefined && this.transaccionesAsociadas !== undefined && this.categories !== undefined) {
       this.isLoading = false;
     }
   }
@@ -206,6 +225,10 @@ export class TransaccionesComponent implements OnInit, OnDestroy {
   getObjetivoName(objetivoId: string): string {
     const obj = this.objetivos.find(o => o.id === objetivoId);
     return obj ? obj.name : 'Desconocido';
+  }
+
+  getCategory(id: string): Category | undefined {
+    return this.categories.find(c => c.id === id);
   }
 
   getObjetivoCurrency(objetivoId: string): string {
@@ -270,6 +293,7 @@ export class TransaccionesComponent implements OnInit, OnDestroy {
 
     const newTx: Omit<Transaccion, 'id' | 'active'> = {
       objetivoId: formVal.objetivoId,
+      categoryId: formVal.categoryId,
       amount: Number(formVal.amount),
       currency: txCurrency.toUpperCase(),
       description: formVal.description.trim(),
@@ -286,12 +310,14 @@ export class TransaccionesComponent implements OnInit, OnDestroy {
         const userNick = this.operation.counterPartNickName || 'Binance';
         this.transaccionForm.reset({
           objetivoId: '',
+          categoryId: '',
           amount: null,
           description: `${tradeTypeLabel} P2P con ${userNick}`
         });
       } else {
         this.transaccionForm.reset({
           objetivoId: '',
+          categoryId: '',
           amount: null,
           currency: 'USDT',
           description: ''

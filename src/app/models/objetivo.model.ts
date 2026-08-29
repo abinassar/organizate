@@ -8,8 +8,6 @@ export interface Objetivo {
   id?: string;
   name: string;
   description: string;
-  categoryId: string;
-  categoryName?: string;
   typeId: string;
   typeCode?: string;
   periodicityId: string;

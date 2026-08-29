@@ -219,6 +219,16 @@ export class BinanceService {
       }
       
       const data = await response.json();
+      if (data && data.data && Array.isArray(data.data)) {
+        data.data = data.data.map((order: any) => {
+          const rawAmount = parseFloat(order.amount) || 0;
+          const commission = parseFloat(order.takerCommission || '0') || 0;
+          order.commission = order.takerCommission; // Mantener propiedad commission para compatibilidad
+          order.netAmount = order.amount; // Guardar monto neto original
+          order.amount = (rawAmount + commission).toString(); // Actualizar al monto bruto total
+          return order;
+        });
+      }
       return data;
     } catch (error: any) {
       console.error(`Error fetching P2P ${tradeType} history:`, error);

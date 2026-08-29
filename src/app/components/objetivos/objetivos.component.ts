@@ -40,15 +40,14 @@ import {
   warningOutline,
   folderOpenOutline,
   calendarOutline,
-  cashOutline
+  cashOutline,
+  medalOutline
 } from 'ionicons/icons';
 import { Subscription } from 'rxjs';
-import { CategoryService } from '../../services/category.service';
 import { TipoObjetivoService } from '../../services/tipo-objetivo.service';
 import { PeriodicityService } from '../../services/periodicity.service';
 import { AmountUnitService } from '../../services/amount-unit.service';
 import { ObjetivoService } from '../../services/objetivo.service';
-import { Category } from '../../models/category.model';
 import { TipoObjetivo } from '../../models/tipo-objetivo.model';
 import { Periodicity } from '../../models/periodicity.model';
 import { AmountUnit } from '../../models/amount-unit.model';
@@ -92,7 +91,6 @@ import { IonProgressBar } from '@ionic/angular/standalone';
 })
 export class ObjetivosComponent implements OnInit, OnDestroy {
   objetivos: Objetivo[] = [];
-  categories: Category[] = [];
   tiposObjetivos: TipoObjetivo[] = [];
   periodicidades: Periodicity[] = [];
   unidadesMonto: AmountUnit[] = [];
@@ -112,7 +110,6 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription = new Subscription();
   
   private fb = inject(FormBuilder);
-  private categoryService = inject(CategoryService);
   private tipoObjetivoService = inject(TipoObjetivoService);
   private periodicityService = inject(PeriodicityService);
   private amountUnitService = inject(AmountUnitService);
@@ -137,23 +134,14 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
       warningOutline,
       folderOpenOutline,
       calendarOutline,
-      cashOutline
+      cashOutline,
+      medalOutline
     });
     
     this.initForms();
   }
 
   ngOnInit() {
-    this.subscriptions.add(
-      this.categoryService.getCategories().subscribe({
-        next: (cats) => {
-          this.categories = cats;
-          this.checkLoadingState();
-        },
-        error: (err) => console.error('Error al cargar categorías:', err)
-      })
-    );
-
     this.subscriptions.add(
       this.tipoObjetivoService.getTiposObjetivos().subscribe({
         next: (tipos) => {
@@ -221,7 +209,6 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
 
   private checkLoadingState() {
     if (
-      this.categories !== undefined && 
       this.tiposObjetivos !== undefined && 
       this.periodicidades !== undefined && 
       this.unidadesMonto !== undefined && 
@@ -258,7 +245,6 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
     this.objetivoForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
       description: ['', [Validators.required, Validators.maxLength(200)]],
-      categoryId: ['', [Validators.required]],
       typeId: ['', [Validators.required]],
       periodicityId: ['', [Validators.required]],
       amount: [null as number | null, [Validators.required, Validators.min(0.01)]],
@@ -302,10 +288,6 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
 
   // --- Mapeos Auxiliares para UI ---
   
-  getCategory(id: string): Category | undefined {
-    return this.categories.find(c => c.id === id);
-  }
-
   getTipo(id: string): TipoObjetivo | undefined {
     return this.tiposObjetivos.find(t => t.id === id);
   }
@@ -418,7 +400,6 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
     this.objetivoForm.reset({
       name: '',
       description: '',
-      categoryId: '',
       typeId: '',
       periodicityId: '',
       amount: null,
@@ -437,7 +418,6 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
     this.objetivoForm.setValue({
       name: obj.name,
       description: obj.description,
-      categoryId: obj.categoryId,
       typeId: obj.typeId,
       periodicityId: obj.periodicityId,
       amount: obj.amount,
@@ -476,7 +456,6 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
     const objetivoData: Omit<Objetivo, 'id' | 'active'> = {
       name: formVal.name.trim(),
       description: formVal.description.trim(),
-      categoryId: formVal.categoryId,
       typeId: formVal.typeId,
       periodicityId: formVal.periodicityId,
       amount: Number(formVal.amount),
