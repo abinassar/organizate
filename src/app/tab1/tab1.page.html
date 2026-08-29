@@ -171,6 +171,12 @@
                   {{ total.amount >= 0 ? '+' : '' }}{{ total.amount | number:'1.2-2' }} {{ total.unitName }}
                 </span>
               </div>
+              <div class="scheme-total-item" *ngFor="let total of getEsquemaEstimados(scheme)">
+                <span class="total-label">Balance Neto Estimado:</span>
+                <span class="total-value" [ngClass]="total.amount >= 0 ? 'text-success' : 'text-danger'">
+                  {{ total.amount >= 0 ? '+' : '' }}{{ total.amount | number:'1.2-2' }} {{ total.unitName }}
+                </span>
+              </div>
             </div>
 
             <!-- Desglose de Objetivos -->

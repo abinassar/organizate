@@ -313,6 +313,33 @@ export class Tab1Page implements OnInit, OnDestroy {
     }));
   }
 
+  getEsquemaEstimados(scheme: EsquemaFinanciero): { amount: number, unitName: string }[] {
+    const totalsMap: { [unitName: string]: number } = {};
+    
+    scheme.configs.forEach(config => {
+      const goal = this.objetivos.find(o => o.id === config.objetivoId);
+      if (!goal) return;
+      
+      const unitName = this.getUnitName(goal.unitId) || 'USD';
+      const targetAmount = goal.amount;
+      
+      if (totalsMap[unitName] === undefined) {
+        totalsMap[unitName] = 0;
+      }
+      
+      if (config.operator === 'sum') {
+        totalsMap[unitName] += targetAmount;
+      } else if (config.operator === 'subtract') {
+        totalsMap[unitName] -= targetAmount;
+      }
+    });
+    
+    return Object.keys(totalsMap).map(unitName => ({
+      amount: totalsMap[unitName],
+      unitName
+    }));
+  }
+
   getGoalProgressById(objetivoId: string): number {
     const goal = this.objetivos.find(o => o.id === objetivoId);
     return goal ? this.getGoalProgress(goal) : 0;
