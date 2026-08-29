@@ -1,23 +1,23 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { 
-  IonCard, 
-  IonCardContent, 
-  IonButton, 
-  IonIcon, 
-  IonList, 
-  IonItem, 
-  IonLabel, 
-  IonBadge, 
-  IonSpinner, 
-  IonModal, 
-  IonButtons, 
-  IonHeader, 
-  IonToolbar, 
-  IonTitle, 
-  IonContent, 
-  IonInput, 
+import {
+  IonCard,
+  IonCardContent,
+  IonButton,
+  IonIcon,
+  IonList,
+  IonItem,
+  IonLabel,
+  IonBadge,
+  IonSpinner,
+  IonModal,
+  IonButtons,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonContent,
+  IonInput,
   IonTextarea,
   IonNote,
   IonSelect,
@@ -25,17 +25,17 @@ import {
   AlertController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { 
-  trophyOutline, 
-  addOutline, 
-  pencilOutline, 
-  trashOutline, 
-  closeOutline, 
-  checkmarkOutline, 
-  alertCircleOutline, 
-  trendingUpOutline, 
-  trendingDownOutline, 
-  notificationsOutline, 
+import {
+  trophyOutline,
+  addOutline,
+  pencilOutline,
+  trashOutline,
+  closeOutline,
+  checkmarkOutline,
+  alertCircleOutline,
+  trendingUpOutline,
+  trendingDownOutline,
+  notificationsOutline,
   listOutline,
   warningOutline,
   folderOpenOutline,
@@ -96,19 +96,19 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
   unidadesMonto: AmountUnit[] = [];
   transacciones: Transaccion[] = [];
   esquemasFinancieros: EsquemaFinanciero[] = [];
-  
+
   isLoading = true;
   isModalOpen = false;
   editingObjetivo: Objetivo | null = null;
-  
+
   objetivoForm!: FormGroup;
   avisoForm!: FormGroup;
-  
+
   tempAlerts: Aviso[] = [];
   editingAvisoIndex: number | null = null;
 
   private subscriptions: Subscription = new Subscription();
-  
+
   private fb = inject(FormBuilder);
   private tipoObjetivoService = inject(TipoObjetivoService);
   private periodicityService = inject(PeriodicityService);
@@ -137,7 +137,7 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
       cashOutline,
       medalOutline
     });
-    
+
     this.initForms();
   }
 
@@ -165,6 +165,7 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
     this.subscriptions.add(
       this.amountUnitService.getAmountUnits().subscribe({
         next: (units) => {
+          console.log("units ", units)
           this.unidadesMonto = units;
           this.checkLoadingState();
         },
@@ -209,9 +210,9 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
 
   private checkLoadingState() {
     if (
-      this.tiposObjetivos !== undefined && 
-      this.periodicidades !== undefined && 
-      this.unidadesMonto !== undefined && 
+      this.tiposObjetivos !== undefined &&
+      this.periodicidades !== undefined &&
+      this.unidadesMonto !== undefined &&
       this.objetivos !== undefined &&
       this.transacciones !== undefined &&
       this.esquemasFinancieros !== undefined
@@ -287,7 +288,7 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
   }
 
   // --- Mapeos Auxiliares para UI ---
-  
+
   getTipo(id: string): TipoObjetivo | undefined {
     return this.tiposObjetivos.find(t => t.id === id);
   }
@@ -329,8 +330,8 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
     const name = this.avisoForm.get('avisoName')?.value;
     if (!name) return false;
     const cleanName = name.trim().toLowerCase();
-    return this.tempAlerts.some((a, idx) => 
-      a.name.trim().toLowerCase() === cleanName && 
+    return this.tempAlerts.some((a, idx) =>
+      a.name.trim().toLowerCase() === cleanName &&
       (this.editingAvisoIndex === null || idx !== this.editingAvisoIndex)
     );
   }
@@ -339,8 +340,8 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
     const percentage = this.avisoForm.get('avisoPercentage')?.value;
     if (percentage === null || percentage === undefined) return false;
     const decimalPct = percentage / 100;
-    return this.tempAlerts.some((a, idx) => 
-      Math.abs(a.percentage - decimalPct) < 0.0001 && 
+    return this.tempAlerts.some((a, idx) =>
+      Math.abs(a.percentage - decimalPct) < 0.0001 &&
       (this.editingAvisoIndex === null || idx !== this.editingAvisoIndex)
     );
   }
@@ -444,7 +445,7 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
 
     const formVal = this.objetivoForm.value;
     const periodicity = this.getPeriodicity(formVal.periodicityId);
-    
+
     // Preparar fechas según periodicidad
     let startDate: Date | null = null;
     let endDate: Date | null = null;
@@ -484,7 +485,7 @@ export class ObjetivosComponent implements OnInit, OnDestroy {
     if (!obj.id) return;
 
     // VALIDACIÓN: No permitir eliminar objetivo si forma parte de algún esquema financiero activo
-    const esquemasAsociados = this.esquemasFinancieros.filter(esq => 
+    const esquemasAsociados = this.esquemasFinancieros.filter(esq =>
       esq.configs.some(c => c.objetivoId === obj.id)
     );
 

@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { 
-  collection, 
-  addDoc, 
-  query, 
-  where, 
+import {
+  collection,
+  addDoc,
+  query,
+  where,
   onSnapshot,
   Firestore,
   getDocs
@@ -18,7 +18,7 @@ import { Observable } from 'rxjs';
 export class AmountUnitService {
   private collectionName = 'unidades-monto';
 
-  constructor(private firebaseService: FirebaseService) {}
+  constructor(private firebaseService: FirebaseService) { }
 
   private get db(): Firestore {
     const db = this.firebaseService.getDb();
@@ -33,7 +33,7 @@ export class AmountUnitService {
       try {
         const ref = collection(this.db, this.collectionName);
         const q = query(
-          ref, 
+          ref,
           where('active', '==', true)
         );
 
@@ -63,7 +63,8 @@ export class AmountUnitService {
             try {
               const allDocsSnap = await getDocs(collection(this.db, this.collectionName));
               if (allDocsSnap.empty) {
-                await this.seedDefaultUnits();
+                // TODO: IMPLEMENTAR EN EL FUTURO SI ES NECESARIO
+                // await this.seedDefaultUnits();
               }
             } catch (e) {
               console.error('Error al inicializar unidades de monto:', e);
@@ -87,7 +88,7 @@ export class AmountUnitService {
               }
             }
           }
-          
+
           // Ordenar por código (USD, USDT, EUR)
           units.sort((a, b) => a.code.localeCompare(b.code));
           subscriber.next(units);
