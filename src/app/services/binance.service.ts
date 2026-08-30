@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, CapacitorHttp } from '@capacitor/core';
 
 @Injectable({
   providedIn: 'root'
@@ -37,6 +37,48 @@ export class BinanceService {
   }
 
   /**
+   * Helper method to perform HTTP requests.
+   * If running on native platforms, it programmatically uses CapacitorHttp to bypass CORS.
+   * Otherwise, it uses the standard browser fetch API.
+   */
+  private async makeRequest(url: string, options: { method: string, headers?: Record<string, string> }): Promise<{ ok: boolean, status: number, data: any }> {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const response = await CapacitorHttp.request({
+          url: url,
+          method: options.method,
+          headers: options.headers
+        });
+        return {
+          ok: response.status >= 200 && response.status < 300,
+          status: response.status,
+          data: response.data
+        };
+      } catch (error) {
+        console.error('CapacitorHttp request error:', error);
+        throw error;
+      }
+    } else {
+      const response = await fetch(url, {
+        method: options.method,
+        mode: 'cors',
+        headers: options.headers
+      });
+      let data = null;
+      if (response.ok || response.status === 400 || response.status === 401 || response.status === 403) {
+        try {
+          data = await response.json();
+        } catch (_) {}
+      }
+      return {
+        ok: response.ok,
+        status: response.status,
+        data: data
+      };
+    }
+  }
+
+  /**
    * Returns if the Binance API keys are configured.
    */
   isConfigured(): boolean {
@@ -56,9 +98,8 @@ export class BinanceService {
    */
   async testPublicConnection(): Promise<boolean> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/v3/ping`, {
-        method: 'GET',
-        mode: 'cors'
+      const response = await this.makeRequest(`${this.baseUrl}/api/v3/ping`, {
+        method: 'GET'
       });
       return response.ok;
     } catch (error) {
@@ -72,13 +113,11 @@ export class BinanceService {
    */
   async getServerTime(): Promise<number> {
     try {
-      const response = await fetch(`${this.baseUrl}/api/v3/time`, {
-        method: 'GET',
-        mode: 'cors'
+      const response = await this.makeRequest(`${this.baseUrl}/api/v3/time`, {
+        method: 'GET'
       });
-      if (response.ok) {
-        const data = await response.json();
-        return data.serverTime;
+      if (response.ok && response.data) {
+        return response.data.serverTime;
       }
     } catch (error) {
       console.warn('Could not sync time with Binance server, using local time:', error);
@@ -120,9 +159,8 @@ export class BinanceService {
       const url = `${this.baseUrl}/api/v3/account?${queryString}&signature=${signature}`;
 
       // 5. Send authenticated request
-      const response = await fetch(url, {
+      const response = await this.makeRequest(url, {
         method: 'GET',
-        mode: 'cors',
         headers: {
           'X-MBX-APIKEY': this.apiKey
         }
@@ -133,12 +171,10 @@ export class BinanceService {
       } else {
         const status = response.status;
         let errorMessage = `HTTP Error ${status}`;
-        try {
-          const errData = await response.json();
-          if (errData && errData.msg) {
-            errorMessage = errData.msg;
-          }
-        } catch (_) {}
+        const errData = response.data;
+        if (errData && errData.msg) {
+          errorMessage = errData.msg;
+        }
 
         if (status === 401 || status === 403) {
           return { 
@@ -199,9 +235,8 @@ export class BinanceService {
       
       const url = `${this.baseUrl}/sapi/v1/c2c/orderMatch/listUserOrderHistory?${queryString}&signature=${signature}`;
       
-      const response = await fetch(url, {
+      const response = await this.makeRequest(url, {
         method: 'GET',
-        mode: 'cors',
         headers: {
           'X-MBX-APIKEY': this.apiKey
         }
@@ -209,16 +244,14 @@ export class BinanceService {
       
       if (!response.ok) {
         let errorMessage = `HTTP Error ${response.status}`;
-        try {
-          const errData = await response.json();
-          if (errData && errData.msg) {
-            errorMessage = errData.msg;
-          }
-        } catch (_) {}
+        const errData = response.data;
+        if (errData && errData.msg) {
+          errorMessage = errData.msg;
+        }
         throw new Error(errorMessage);
       }
       
-      const data = await response.json();
+      const data = response.data;
       if (data && data.data && Array.isArray(data.data)) {
         data.data = data.data.map((order: any) => {
           const rawAmount = parseFloat(order.amount) || 0;
