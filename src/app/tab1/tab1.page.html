@@ -299,7 +299,7 @@
   </ion-modal>
 
   <!-- MODAL DE TRANSACCIONES POR OBJETIVO -->
-  <ion-modal [isOpen]="isObjetivoTransaccionesModalOpen" (didDismiss)="cerrarModalTransaccionesObjetivo()">
+  <ion-modal [isOpen]="isObjetivoTransaccionesModalOpen" (didDismiss)="cerrarModalTransaccionesObjetivo()" class="full-screen-modal">
     <ng-template>
       <app-objetivo-transacciones 
         [goal]="selectedObjetivo" 

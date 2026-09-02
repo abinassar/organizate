@@ -1,3 +1,14 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+ion-content {
+  --height: 100%;
+}
+
 .loader-wrapper {
   margin-top: 3rem;
   color: var(--ion-color-medium);
