@@ -121,6 +121,16 @@
               <ion-badge [color]="getGoalPercentage(goal) >= 1 ? 'success' : 'primary'" class="pct-badge">
                 {{ getGoalPercentageLabel(goal) }}
               </ion-badge>
+              <!-- Icono para ver transacciones asociadas -->
+              <ion-button 
+                fill="clear" 
+                size="small" 
+                color="medium"
+                class="goal-tx-btn"
+                (click)="abrirModalTransaccionesObjetivo($event, goal)"
+                title="Ver transacciones del objetivo">
+                <ion-icon slot="icon-only" name="receipt-outline"></ion-icon>
+              </ion-button>
             </div>
             <ion-card-title>{{ goal.name }}</ion-card-title>
           </ion-card-header>
@@ -285,6 +295,16 @@
   <ion-modal [isOpen]="isTransaccionesModalOpen" (didDismiss)="cerrarNuevaTransaccionModal()">
     <ng-template>
       <app-transacciones (close)="cerrarNuevaTransaccionModal()"></app-transacciones>
+    </ng-template>
+  </ion-modal>
+
+  <!-- MODAL DE TRANSACCIONES POR OBJETIVO -->
+  <ion-modal [isOpen]="isObjetivoTransaccionesModalOpen" (didDismiss)="cerrarModalTransaccionesObjetivo()">
+    <ng-template>
+      <app-objetivo-transacciones 
+        [goal]="selectedObjetivo" 
+        (close)="cerrarModalTransaccionesObjetivo()">
+      </app-objetivo-transacciones>
     </ng-template>
   </ion-modal>
 </ion-content>

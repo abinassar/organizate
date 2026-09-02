@@ -42,7 +42,8 @@ import {
   chevronForwardOutline,
   swapHorizontal,
   trendingDownOutline,
-  calendarOutline
+  calendarOutline,
+  receiptOutline
 } from 'ionicons/icons';
 import { Subscription, combineLatest } from 'rxjs';
 import { ObjetivoService } from '../services/objetivo.service';
@@ -56,6 +57,7 @@ import { Transaccion } from '../models/transaccion.model';
 import { EsquemaFinanciero } from '../models/esquema-financiero.model';
 import { Category } from '../models/category.model';
 import { TransaccionesComponent } from '../components/transacciones/transacciones.component';
+import { ObjetivoTransaccionesComponent } from '../components/objetivo-transacciones/objetivo-transacciones.component';
 
 @Component({
   selector: 'app-tab1',
@@ -88,7 +90,8 @@ import { TransaccionesComponent } from '../components/transacciones/transaccione
     IonSpinner,
     IonSelect,
     IonSelectOption,
-    TransaccionesComponent
+    TransaccionesComponent,
+    ObjetivoTransaccionesComponent
   ],
 })
 export class Tab1Page implements OnInit, OnDestroy {
@@ -103,6 +106,8 @@ export class Tab1Page implements OnInit, OnDestroy {
   balances: { [key: string]: number } = { USDT: 0, EUR: 0, BS: 0 };
   isLoading = true;
   isTransaccionesModalOpen = false;
+  isObjetivoTransaccionesModalOpen = false;
+  selectedObjetivo: Objetivo | null = null;
 
   availablePeriods: { value: string; label: string }[] = [];
   selectedPeriod = '';
@@ -131,7 +136,8 @@ export class Tab1Page implements OnInit, OnDestroy {
       chevronForwardOutline,
       swapHorizontal,
       trendingDownOutline,
-      calendarOutline
+      calendarOutline,
+      receiptOutline
     });
   }
 
@@ -260,6 +266,17 @@ export class Tab1Page implements OnInit, OnDestroy {
 
   cerrarNuevaTransaccionModal() {
     this.isTransaccionesModalOpen = false;
+  }
+
+  abrirModalTransaccionesObjetivo(event: Event, goal: Objetivo) {
+    event.stopPropagation();
+    this.selectedObjetivo = goal;
+    this.isObjetivoTransaccionesModalOpen = true;
+  }
+
+  cerrarModalTransaccionesObjetivo() {
+    this.isObjetivoTransaccionesModalOpen = false;
+    this.selectedObjetivo = null;
   }
 
   // --- Eliminar Transacción ---

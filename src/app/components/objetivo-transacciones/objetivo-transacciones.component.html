@@ -1,0 +1,141 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>
+      Transacciones: {{ goal?.name }}
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cerrarModal()">
+        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Spinner de Carga -->
+  <div class="loader-wrapper ion-padding ion-text-center" *ngIf="isLoading">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Cargando transacciones del objetivo...</p>
+  </div>
+
+  <div *ngIf="!isLoading">
+    <!-- Estado vacío -->
+    <div class="empty-state ion-padding ion-text-center" *ngIf="transacciones.length === 0">
+      <ion-icon name="receipt-outline" class="empty-icon"></ion-icon>
+      <h3>Sin transacciones</h3>
+      <p>No hay transacciones asociadas a este objetivo financiero.</p>
+    </div>
+
+    <!-- Lista de Transacciones -->
+    <ion-list class="tx-modal-list" lines="full" *ngIf="transacciones.length > 0">
+      <div *ngFor="let tx of transacciones" class="tx-card-wrapper">
+        
+        <!-- VISTA MODO LECTURA -->
+        <ion-item class="tx-item" *ngIf="editingTxId !== tx.id">
+          <!-- Icono de Categoría -->
+          <div slot="start" class="tx-icon-badge"
+               [style.background-color]="getCategory(tx.categoryId)?.color ? getCategory(tx.categoryId)?.color + '22' : 'rgba(255,255,255,0.1)'"
+               [style.color]="getCategory(tx.categoryId)?.color || 'var(--ion-color-primary)'">
+            <ion-icon [name]="getCategory(tx.categoryId)?.icon || (tx.operationId ? 'cash-outline' : 'wallet-outline')"></ion-icon>
+          </div>
+
+          <ion-label>
+            <h3>{{ tx.description }}</h3>
+            <div class="tx-details">
+              <span class="tx-date">
+                <ion-icon name="calendar-outline"></ion-icon>
+                {{ (tx.fecha || tx.createdAt) | date:'dd/MM/yyyy' }}
+              </span>
+              <span class="tx-category" *ngIf="getCategory(tx.categoryId)">
+                <ion-icon name="pricetag-outline"></ion-icon>
+                {{ getCategory(tx.categoryId)?.name }}
+              </span>
+              <ion-chip color="tertiary" outline="true" class="tx-chip" *ngIf="tx.operationId">P2P</ion-chip>
+              <ion-chip color="medium" outline="true" class="tx-chip" *ngIf="!tx.operationId">Manual</ion-chip>
+            </div>
+          </ion-label>
+
+          <div slot="end" class="tx-end-actions">
+            <div class="tx-amount">
+              +{{ tx.amount | number:'1.2-8' }} {{ tx.currency }}
+            </div>
+            <div class="action-buttons">
+              <ion-button fill="clear" color="primary" size="small" (click)="startEditing(tx)" title="Editar">
+                <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+              </ion-button>
+              <ion-button fill="clear" color="danger" size="small" (click)="confirmDelete(tx)" title="Eliminar">
+                <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+              </ion-button>
+            </div>
+          </div>
+        </ion-item>
+
+        <!-- VISTA MODO EDICIÓN -->
+        <div class="edit-form-card ion-padding" *ngIf="editingTxId === tx.id">
+          <div class="edit-header">
+            <h4>Editar Transacción</h4>
+          </div>
+          <form [formGroup]="editForm" (ngSubmit)="saveEdit(tx)">
+            <ion-item class="edit-input-item">
+              <ion-label position="stacked">Descripción</ion-label>
+              <ion-input formControlName="description" placeholder="Ej. Depósito inicial"></ion-input>
+            </ion-item>
+
+            <div class="edit-row">
+              <ion-item class="edit-input-item flex-2">
+                <ion-label position="stacked">Monto</ion-label>
+                <ion-input type="number" formControlName="amount" placeholder="0.00"></ion-input>
+              </ion-item>
+
+              <ion-item class="edit-input-item flex-1">
+                <ion-label position="stacked">Moneda</ion-label>
+                <ion-select formControlName="currency" interface="popover">
+                  <ion-select-option value="USDT">USDT</ion-select-option>
+                  <ion-select-option value="USD">USD</ion-select-option>
+                  <ion-select-option value="EUR">EUR</ion-select-option>
+                  <ion-select-option value="BS">BS</ion-select-option>
+                  <ion-select-option value="VES">VES</ion-select-option>
+                </ion-select>
+              </ion-item>
+            </div>
+
+            <ion-item class="edit-input-item">
+              <ion-label position="stacked">Categoría</ion-label>
+              <ion-select formControlName="categoryId" interface="popover" placeholder="Seleccionar categoría">
+                <ion-select-option *ngFor="let cat of categories" [value]="cat.id">
+                  {{ cat.name }}
+                </ion-select-option>
+              </ion-select>
+            </ion-item>
+
+            <div class="edit-row">
+              <ion-item class="edit-input-item flex-1">
+                <ion-label position="stacked">Fecha</ion-label>
+                <ion-input type="date" formControlName="fecha"></ion-input>
+              </ion-item>
+
+              <ion-item class="edit-input-item flex-1">
+                <ion-label position="stacked">Período (YYYY-MM)</ion-label>
+                <ion-input formControlName="mes" placeholder="2026-09"></ion-input>
+              </ion-item>
+            </div>
+
+            <div class="edit-actions ion-margin-top ion-text-end">
+              <ion-button fill="outline" color="medium" size="small" (click)="cancelEditing()" [disabled]="isSaving">
+                <ion-icon slot="start" name="close-circle-outline"></ion-icon>
+                Cancelar
+              </ion-button>
+              <ion-button color="success" size="small" type="submit" [disabled]="editForm.invalid || isSaving">
+                <ion-spinner name="crescent" *ngIf="isSaving"></ion-spinner>
+                <ion-icon slot="start" name="checkmark-outline" *ngIf="!isSaving"></ion-icon>
+                Guardar
+              </ion-button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </ion-list>
+  </div>
+</ion-content>
+

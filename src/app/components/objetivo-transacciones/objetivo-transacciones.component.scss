@@ -1,0 +1,154 @@
+.loader-wrapper {
+  margin-top: 3rem;
+  color: var(--ion-color-medium);
+}
+
+.empty-state {
+  margin-top: 3rem;
+  color: var(--ion-color-medium);
+
+  .empty-icon {
+    font-size: 3.5rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.6;
+  }
+
+  h3 {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  p {
+    font-size: 0.9rem;
+  }
+}
+
+.tx-modal-list {
+  background: transparent;
+  padding: 0;
+
+  .tx-card-wrapper {
+    margin-bottom: 0.75rem;
+    border-radius: 12px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .tx-item {
+    --background: transparent;
+    --padding-start: 12px;
+    --padding-end: 12px;
+    --inner-padding-end: 0;
+
+    .tx-icon-badge {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      margin-right: 12px;
+    }
+
+    h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--ion-color-light, #fff);
+      margin-bottom: 4px;
+    }
+
+    .tx-details {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: var(--ion-color-medium);
+
+      .tx-date, .tx-category {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+      }
+
+      .tx-chip {
+        font-size: 0.65rem;
+        height: 18px;
+        padding: 0 6px;
+        margin: 0;
+      }
+    }
+
+    .tx-end-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+
+      .tx-amount {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--ion-color-success);
+      }
+
+      .action-buttons {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        margin-top: 2px;
+
+        ion-button {
+          --padding-start: 6px;
+          --padding-end: 6px;
+          height: 28px;
+          font-size: 1.1rem;
+        }
+      }
+    }
+  }
+
+  .edit-form-card {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 12px;
+    border: 1px solid var(--ion-color-primary-tint, #3880ff);
+
+    .edit-header {
+      h4 {
+        margin: 0 0 12px 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--ion-color-primary);
+      }
+    }
+
+    .edit-input-item {
+      --background: rgba(255, 255, 255, 0.05);
+      --border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+    }
+
+    .edit-row {
+      display: flex;
+      gap: 8px;
+
+      .flex-1 {
+        flex: 1;
+      }
+
+      .flex-2 {
+        flex: 2;
+      }
+    }
+
+    .edit-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+  }
+}
+
