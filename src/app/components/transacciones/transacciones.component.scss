@@ -1,3 +1,10 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
 .main-toolbar {
   --background: var(--ion-color-primary, #3b82f6);
   --color: #ffffff;
@@ -13,7 +20,8 @@
 
 .modal-content {
   --background: var(--ion-background-color, #1e2026);
-  height: 35rem;
+  height: 100%;
+  flex: 1;
 }
 
 .loading-container {
